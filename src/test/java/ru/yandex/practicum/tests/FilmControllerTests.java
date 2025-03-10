@@ -68,6 +68,17 @@ public class FilmControllerTests {
     }
 
     @Test
+    public void testCreateFilmWithDescription199Characters() {
+        Film testFilm = new Film("Test", "a".repeat(199),
+                LocalDate.of(2015,11,23), 112);
+        filmController.create(testFilm);
+        Film checkFilm = new Film("Test", "a".repeat(199),
+                LocalDate.of(2015,11,23), 112);
+        checkFilm.setId(1L);
+        Assertions.assertEquals(checkFilm, testFilm);
+    }
+
+    @Test
     public void testCreateFilmWithBeforeCorrectDate() {
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
         Assertions.assertThrows(ValidationException.class, () -> filmController.create(film));
