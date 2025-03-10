@@ -38,6 +38,16 @@
 			<artifactId>slf4j-reload4j</artifactId>
 			<version>2.0.17</version>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-migration-support</artifactId>
+			<version>5.0.0-M4</version>
+		</dependency>
 	</dependencies>
 
 	<build>
