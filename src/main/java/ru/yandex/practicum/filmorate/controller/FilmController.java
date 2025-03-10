@@ -48,7 +48,7 @@ public class FilmController {
             logger.debug("Новое описание фильма с id {}: {}", oldFilm.getId(), oldFilm.getDescription());
             oldFilm.setDuration(newFilm.getDuration());
             logger.debug("Новая продолжительность фильма с id {}: {} минут", oldFilm.getId(),
-                    oldFilm.getDuration().toMinutes());
+                    oldFilm.getDuration());
             oldFilm.setReleaseDate(newFilm.getReleaseDate());
             logger.debug("Новая дата релиза фильма с id {}: {}", oldFilm.getId(), oldFilm.getReleaseDate());
             logger.info("Данные о фильме с ID = {} обновлены, информация о фильме: {}", oldFilm.getId(), oldFilm);
@@ -72,7 +72,7 @@ public class FilmController {
             logger.error("Фильм с ID = {}. Дата релиза — не раньше 28 декабря 1895 года", film.getId());
             throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
         }
-        if (film.getDuration().toSeconds() < 0) {
+        if (film.getDuration() < 0) {
             logger.error("Фильм с ID = {}. Продолжительность фильма должна быть положительным числом.", film.getId());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом.");
         }
