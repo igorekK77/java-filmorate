@@ -16,7 +16,7 @@ import java.util.Map;
 public class FilmController {
 
     Map<Long, Film> films = new HashMap<>();
-    private final static Logger logger = LoggerFactory.getLogger(FilmController.class);
+    private static final Logger logger = LoggerFactory.getLogger(FilmController.class);
 
     @GetMapping
     public Collection<Film> allFilms() {
@@ -43,7 +43,7 @@ public class FilmController {
             Film oldFilm = films.get(newFilm.getId());
             validate(newFilm);
             oldFilm.setName(newFilm.getName());
-            logger.debug("Новое название фильма с id {}: {}" , oldFilm.getId(), oldFilm.getName());
+            logger.debug("Новое название фильма с id {}: {}", oldFilm.getId(), oldFilm.getName());
             oldFilm.setDescription(newFilm.getDescription());
             logger.debug("Новое описание фильма с id {}: {}", oldFilm.getId(), oldFilm.getDescription());
             oldFilm.setDuration(newFilm.getDuration());
