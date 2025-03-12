@@ -24,7 +24,7 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@Valid @RequestBody Film film) {
+    public Film create(@RequestBody Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Фильм с ID = {}. Название фильма не может быть пустым", film.getId());
             throw new ValidationException("Название фильма не может быть пустым");
@@ -50,7 +50,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film newFilm) {
+    public Film update(@RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
             log.error("Id должен быть указан");
             throw new ValidationException("Id должен быть указан");

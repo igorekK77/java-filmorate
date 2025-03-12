@@ -16,15 +16,12 @@ public class Film {
     @NotNull
     private Long id;
 
-    @Null(groups = Marker.OnUpdate.class)
-    @NotNull(groups = Marker.OnCreate.class)
+    @NotNull
     @NotBlank
     private String name;
 
-    @Null(groups = Marker.OnUpdate.class)
     private String description;
 
-    @Null(groups = Marker.OnUpdate.class)
     private LocalDate releaseDate;
 
     @Positive
