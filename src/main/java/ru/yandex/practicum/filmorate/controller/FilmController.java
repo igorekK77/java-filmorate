@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -23,21 +24,21 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Фильм с ID = {}. Название фильма не может быть пустым", film.getId());
             throw new ValidationException("Название фильма не может быть пустым");
         }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
+        if (film.getDescription() == null || film.getDescription().length() > 200) {
             log.error("Фильм с ID = {}. Максимальная длина описания — 200 символов", film.getId());
             throw new ValidationException("Максимальная длина описания — 200 символов");
         }
-        if (film.getDescription() != null &&
+        if (film.getReleaseDate() == null ||
                 !film.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
             log.error("Фильм с ID = {}. Дата релиза — не раньше 28 декабря 1895 года", film.getId());
             throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
         }
-        if (film.getDuration() != null && film.getDuration() < 0) {
+        if (film.getDuration() == null || film.getDuration() < 0) {
             log.error("Фильм с ID = {}. Продолжительность фильма должна быть положительным числом.", film.getId());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом.");
         }
@@ -49,7 +50,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film newFilm) {
+    public Film update(@Valid @RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
             log.error("Id должен быть указан");
             throw new ValidationException("Id должен быть указан");
@@ -61,8 +62,14 @@ public class FilmController {
                 log.debug("Новое название фильма с id {}: {}", oldFilm.getId(), oldFilm.getName());
             }
             if (newFilm.getDescription() != null && !newFilm.getDescription().equals(oldFilm.getDescription())) {
-                oldFilm.setDescription(newFilm.getDescription());
-                log.debug("Новое описание фильма с id {}: {}", oldFilm.getId(), oldFilm.getDescription());
+                if (newFilm.getDescription().length() > 200) {
+                    log.error("Максимальная длина описания — 200 символов");
+                    throw new ValidationException("Максимальная длина описания — 200 символов");
+                } else {
+                    oldFilm.setDescription(newFilm.getDescription());
+                    log.debug("Новое описание фильма с id {}: {}", oldFilm.getId(), oldFilm.getDescription());
+                }
+
             }
             if (newFilm.getDuration() != null && !newFilm.getDuration().equals(oldFilm.getDuration())) {
                 oldFilm.setDuration(newFilm.getDuration());
@@ -70,8 +77,13 @@ public class FilmController {
                         oldFilm.getDuration());
             }
             if (newFilm.getReleaseDate() != null && !newFilm.getReleaseDate().equals(oldFilm.getReleaseDate())) {
-                oldFilm.setReleaseDate(newFilm.getReleaseDate());
-                log.debug("Новая дата релиза фильма с id {}: {}", oldFilm.getId(), oldFilm.getReleaseDate());
+                if (!newFilm.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
+                    log.error("Дата релиза — не раньше 28 декабря 1895 года");
+                    throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+                } else {
+                    oldFilm.setReleaseDate(newFilm.getReleaseDate());
+                    log.debug("Новая дата релиза фильма с id {}: {}", oldFilm.getId(), oldFilm.getReleaseDate());
+                }
             }
             log.info("Данные о фильме с ID = {} обновлены, информация о фильме: {}", oldFilm.getId(), oldFilm);
             return oldFilm;
