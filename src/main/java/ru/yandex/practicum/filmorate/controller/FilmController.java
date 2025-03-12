@@ -49,7 +49,7 @@ public class FilmController {
                 oldFilm.setDescription(newFilm.getDescription());
                 log.debug("Новое описание фильма с id {}: {}", oldFilm.getId(), oldFilm.getDescription());
             }
-            if (newFilm.getDuration() != oldFilm.getDuration()) {
+            if (!newFilm.getDuration().equals(oldFilm.getDuration())) {
                 oldFilm.setDuration(newFilm.getDuration());
                 log.debug("Новая продолжительность фильма с id {}: {} минут", oldFilm.getId(),
                         oldFilm.getDuration());
@@ -70,15 +70,16 @@ public class FilmController {
             log.error("Фильм с ID = {}. Название фильма не может быть пустым", film.getId());
             throw new ValidationException("Название фильма не может быть пустым");
         }
-        if (film.getDescription().length() > 200) {
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
             log.error("Фильм с ID = {}. Максимальная длина описания — 200 символов", film.getId());
             throw new ValidationException("Максимальная длина описания — 200 символов");
         }
-        if (!film.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
+        if (film.getDescription() != null &&
+                !film.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
             log.error("Фильм с ID = {}. Дата релиза — не раньше 28 декабря 1895 года", film.getId());
             throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
         }
-        if (film.getDuration() < 0) {
+        if (film.getDuration() != null && film.getDuration() < 0) {
             log.error("Фильм с ID = {}. Продолжительность фильма должна быть положительным числом.", film.getId());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом.");
         }
