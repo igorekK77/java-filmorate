@@ -14,8 +14,7 @@ public class Film {
     @NotNull
     private Long id;
 
-    @NotNull
-    @NotBlank
+    @NotBlank()
     private String name;
 
     private String description;
