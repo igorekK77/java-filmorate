@@ -68,7 +68,7 @@ public class FilmService {
         }
 
         Set<Film> totalSetFilms = new LinkedHashSet<>();
-        while (totalSetFilms.size() <= count) {
+        for (int i = 0; i < count; i++) {
             int maxLikes = -1;
             Film totalFilm = null;
             for (Film film: films) {
@@ -77,13 +77,12 @@ public class FilmService {
                     totalFilm = film;
                 }
             }
-            totalSetFilms.add(totalFilm);
-            films.remove(totalFilm);
+            if (totalFilm != null) {
+                totalSetFilms.add(totalFilm);
+                films.remove(totalFilm);
+            }
         }
-        List<Film> totalListFilm = new ArrayList<>(totalSetFilms);
-        Collections.reverse(totalListFilm);
-
-        return totalListFilm;
+        return new ArrayList<>(totalSetFilms);
     }
 
     private Film checkFilmAndUser(Long filmId, Long userId) {
