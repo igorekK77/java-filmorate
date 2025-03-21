@@ -34,7 +34,7 @@ public class UserService {
         return userStorage.allUser();
     }
 
-    public User addFriend (Long addingUserId, Long userWhoAddedId) {
+    public User addFriend(Long addingUserId, Long userWhoAddedId) {
         User addingUser;
         User userWhoAdded;
 
