@@ -17,8 +17,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
-    public Map<Long, Film> getFilms() {
-        return films;
+    public Film getFilmById(Long id) {
+        Film film = films.get(id);
+        if (film != null) {
+            return film;
+        } else {
+            log.error("Фильма с Id = {} не существует", id);
+            throw new NotFoundException("Фильма с ID = " + id + " не существует!");
+        }
     }
 
     @Override

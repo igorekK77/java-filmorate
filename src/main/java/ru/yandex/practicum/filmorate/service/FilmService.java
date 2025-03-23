@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.controller.FilmRatingComparator;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -32,47 +30,29 @@ public class FilmService {
         return filmStorage.allFilms();
     }
 
-    public Film putLike(Long filmId, Long userId) {
-        Film film = filmStorage.getFilms().get(filmId);
-        User user = userStorage.getUsers().get(userId);
+    public Film getFilmById(Long id) {
+        return filmStorage.getFilmById(id);
+    }
 
-        if (film != null) {
-            if (user != null) {
-                film.getLikes().add(userId);
-                log.info("Пользователь с ID = {} поставил лайк фильму: {}", userId, film);
-                return film;
-            } else {
-                log.error("Пользователя с Id = {} не существует", userId);
-                throw new NotFoundException("Пользователя с ID = " + userId + " не существует!");
-            }
-        } else {
-            log.error("Фильма с Id = {} не существует", filmId);
-            throw new NotFoundException("Фильма с ID = " + filmId + " не существует!");
-        }
+    public Film putLike(Long filmId, Long userId) {
+        Film film = getFilmById(filmId);
+        userStorage.getUserById(userId);
+        film.getLikes().add(userId);
+        log.info("Пользователь с ID = {} поставил лайк фильму: {}", userId, film);
+        return film;
     }
 
     public Film deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.getFilms().get(filmId);
-        User user = userStorage.getUsers().get(userId);
-
-        if (film != null) {
-            if (user != null) {
-                if (film.getLikes().contains(userId)) {
-                    film.getLikes().remove(userId);
-                    log.info("Пользователь с ID = {} удалил лайк фильму: {}", userId, film);
-                } else {
-                    log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
-                    throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
-                }
-                return film;
-            } else {
-                log.error("Пользователя с id = {} не существует", userId);
-                throw new NotFoundException("Пользователя с ID = " + userId + " не существует!");
-            }
+        Film film = getFilmById(filmId);
+        userStorage.getUserById(userId);
+        if (film.getLikes().contains(userId)) {
+            film.getLikes().remove(userId);
+            log.info("Пользователь с ID = {} удалил лайк фильму: {}", userId, film);
         } else {
-            log.error("Фильма с id = {} не существует", filmId);
-            throw new NotFoundException("Фильма с ID = " + filmId + " не существует!");
+            log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
+            throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
         }
+        return film;
     }
 
     public List<Film> getTopFilmsByLikes(int count) {

@@ -57,4 +57,9 @@ public class UserController {
         return userService.printListCommonFriends(id, otherId);
     }
 
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+
 }

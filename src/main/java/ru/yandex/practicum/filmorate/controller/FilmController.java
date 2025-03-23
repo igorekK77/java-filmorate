@@ -52,4 +52,9 @@ public class FilmController {
         return filmService.getTopFilmsByLikes(count);
     }
 
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        return filmService.getFilmById(id);
+    }
+
 }

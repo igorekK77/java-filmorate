@@ -18,8 +18,14 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
-    public Map<Long, User> getUsers() {
-        return users;
+    public User getUserById(Long id) {
+        User user = users.get(id);
+        if (user != null) {
+            return user;
+        } else {
+            log.error("Пользователя с Id = {} не существует", id);
+            throw new NotFoundException("Пользователя с ID = " + id + " не существует!");
+        }
     }
 
     @Override
