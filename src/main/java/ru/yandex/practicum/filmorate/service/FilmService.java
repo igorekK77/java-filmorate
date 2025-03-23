@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.controller.FilmRatingComparator;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,15 +16,10 @@ import java.util.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
 
     public Film create(Film film) {
         return filmStorage.create(film);
@@ -37,27 +34,46 @@ public class FilmService {
     }
 
     public Film putLike(Long filmId, Long userId) {
-        Film film = checkFilmAndUser(filmId, userId);
+        Film film = filmStorage.getFilms().get(filmId);
+        User user = userStorage.getUsers().get(userId);
 
-        film.getLikes().add(userId);
-        log.info("Пользователь с ID = {} поставил лайк фильму: {}", userId, film);
-        filmStorage.update(film);
-
-        return film;
+        if (film != null) {
+            if (user != null) {
+                film.getLikes().add(userId);
+                log.info("Пользователь с ID = {} поставил лайк фильму: {}", userId, film);
+                return film;
+            } else {
+                log.error("Пользователя с Id = {} не существует", userId);
+                throw new NotFoundException("Пользователя с ID = " + userId + " не существует!");
+            }
+        } else {
+            log.error("Фильма с Id = {} не существует", filmId);
+            throw new NotFoundException("Фильма с ID = " + filmId + " не существует!");
+        }
     }
 
     public Film deleteLike(Long filmId, Long userId) {
-        Film film = checkFilmAndUser(filmId, userId);
+        Film film = filmStorage.getFilms().get(filmId);
+        User user = userStorage.getUsers().get(userId);
 
-        if (film.getLikes().contains(userId)) {
-            film.getLikes().remove(userId);
-            log.info("Пользователь с ID = {} удалил лайк фильму: {}", userId, film);
-            filmStorage.update(film);
+        if (film != null) {
+            if (user != null) {
+                if (film.getLikes().contains(userId)) {
+                    film.getLikes().remove(userId);
+                    log.info("Пользователь с ID = {} удалил лайк фильму: {}", userId, film);
+                } else {
+                    log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
+                    throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
+                }
+                return film;
+            } else {
+                log.error("Пользователя с id = {} не существует", userId);
+                throw new NotFoundException("Пользователя с ID = " + userId + " не существует!");
+            }
         } else {
-            log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
-            throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
+            log.error("Фильма с id = {} не существует", filmId);
+            throw new NotFoundException("Фильма с ID = " + filmId + " не существует!");
         }
-        return film;
     }
 
     public List<Film> getTopFilmsByLikes(int count) {
@@ -67,47 +83,12 @@ public class FilmService {
             count = films.size();
         }
 
-        Set<Film> totalSetFilms = new LinkedHashSet<>();
-        for (int i = 0; i < count; i++) {
-            int maxLikes = -1;
-            Film totalFilm = null;
-            for (Film film: films) {
-                if (film.getLikes().size() > maxLikes) {
-                    maxLikes = film.getLikes().size();
-                    totalFilm = film;
-                }
-            }
-            if (totalFilm != null) {
-                totalSetFilms.add(totalFilm);
-                films.remove(totalFilm);
-            }
-        }
-        return new ArrayList<>(totalSetFilms);
-    }
+        films = films.stream()
+                .sorted(new FilmRatingComparator().reversed())
+                .limit(count)
+                .toList();
 
-    private Film checkFilmAndUser(Long filmId, Long userId) {
-        Film film;
-
-        Optional<User> userOptional = userStorage.allUser().stream()
-                .filter(user1 -> user1.getId().equals(userId))
-                .findFirst();
-
-        Optional<Film> filmOptional = filmStorage.allFilms().stream()
-                .filter(film1 -> film1.getId().equals(filmId))
-                .findFirst();
-
-        if (userOptional.isEmpty()) {
-            log.error("Пользователя с Id = {} не существует", userId);
-            throw new NotFoundException("Пользователя с ID = " + userId + " не существует!");
-        }
-
-        if (filmOptional.isEmpty()) {
-            log.error("Фильма с Id = {} не существует", filmId);
-            throw new NotFoundException("Фильма с ID = " + filmId + " не существует!");
-        } else {
-            film = filmOptional.get();
-        }
-        return film;
+        return films;
     }
 
 }
