@@ -20,12 +20,11 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User getUserById(Long id) {
         User user = users.get(id);
-        if (user != null) {
-            return user;
-        } else {
+        if (user == null) {
             log.error("Пользователя с Id = {} не существует", id);
             throw new NotFoundException("Пользователя с ID = " + id + " не существует!");
         }
+        return user;
     }
 
     @Override

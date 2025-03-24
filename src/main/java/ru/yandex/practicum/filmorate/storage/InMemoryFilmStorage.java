@@ -19,12 +19,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film getFilmById(Long id) {
         Film film = films.get(id);
-        if (film != null) {
-            return film;
-        } else {
+        if (film == null) {
             log.error("Фильма с Id = {} не существует", id);
             throw new NotFoundException("Фильма с ID = " + id + " не существует!");
         }
+        return film;
     }
 
     @Override
