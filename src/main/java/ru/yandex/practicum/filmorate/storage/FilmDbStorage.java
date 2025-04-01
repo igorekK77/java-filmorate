@@ -15,6 +15,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 
 @Repository
 @Slf4j
@@ -26,6 +27,8 @@ public class FilmDbStorage implements FilmStorage{
     private final String QUERY_FOR_GET_FILM_BY_ID = "SELECT * FROM film WHERE film_id = ?;";
     private final String QUERY_FOR_UPDATE_FILM = "UPDATE film SET name = ?, description = ?, release_date = ?, " +
             "duration = ?, rating = ? WHERE film_id = ?;";
+    private final String QUERY_FOR_ADD_GENRE = "INSERT INTO film_genre (film_id, genre_id) " +
+            "VALUES (?, ?)";
     private final String QUERY_FOR_GET_ALL_FILM = "SELECT * FROM film;";
 
     @Autowired
@@ -62,6 +65,9 @@ public class FilmDbStorage implements FilmStorage{
             ps.setTimestamp(3, Timestamp.valueOf(film.getReleaseDate().atStartOfDay()));
             return ps;
         }, keyHolder);
+
+        List<String> genre = film.getGenre();
+        jdbcTemplate.update(connection -> )
 
         Long id = keyHolder.getKeyAs(Long.class);
 
