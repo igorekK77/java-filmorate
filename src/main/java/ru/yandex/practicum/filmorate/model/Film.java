@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.Set;
 
 
 @Data
+@NoArgsConstructor
 public class Film {
 
     @NotNull
@@ -31,10 +33,10 @@ public class Film {
 
     private List<String> genre;
 
-    private Raitings rating;
+    private String rating;
 
     public Film(String name, String description, LocalDate releaseDate, int duration, List<String> genre,
-                Raitings rating) {
+                String rating) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
