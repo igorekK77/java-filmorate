@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
@@ -20,6 +21,7 @@ import java.util.*;
 
 @Repository
 @Slf4j
+@Qualifier("dbUserStorage")
 public class UserDbStorage implements UserStorage{
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper mapper;

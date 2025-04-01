@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Component
 public class InMemoryFilmStorageTests {
@@ -23,14 +24,15 @@ public class InMemoryFilmStorageTests {
     public void beforeEach() {
         filmStorage = new InMemoryFilmStorage();
         film = new Film("testFilm", "dTestFilm", LocalDate.of(2015,11,23),
-                112);
+                112, Set.of(Long.valueOf("2")), "PG-13");
     }
 
     @Test
     public void testCreateFilm() {
         filmStorage.create(film);
         Film checkFilm = new Film("testFilm", "dTestFilm",
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, Set.of(Long.valueOf("2")),
+                "PG-13");
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, film);
     }
@@ -39,7 +41,8 @@ public class InMemoryFilmStorageTests {
     public void testUpdateFilm() {
         filmStorage.create(film);
         Film updateFilm = new Film("testUpdateFilm", "dTestUpdateFilm",
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112,
+                Set.of(Long.valueOf("2")), "PG-13");
         updateFilm.setId(1L);
         filmStorage.update(updateFilm);
         Assertions.assertEquals(updateFilm, film);
@@ -48,24 +51,27 @@ public class InMemoryFilmStorageTests {
     @Test
     public void testCreateFilmWithNullName() {
         Film nullNameFilm = new Film(null, "testFilm", LocalDate.of(2015,11,23),
-                112);
+                112, Set.of(Long.valueOf("2")), "PG-13");
         Assertions.assertThrows(ValidationException.class, () -> filmStorage.create(nullNameFilm));
     }
 
     @Test
     public void testCreateFilmWithDescription201Characters() {
         Film testFilm = new Film("Test", "a".repeat(201),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112,
+                Set.of(Long.valueOf("2")), "PG-13");
         Assertions.assertThrows(ValidationException.class, () -> filmStorage.create(testFilm));
     }
 
     @Test
     public void testCreateFilmWithDescription200Characters() {
         Film testFilm = new Film("Test", "a".repeat(200),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, Set.of(Long.valueOf("2")),
+                "PG-13");
         filmStorage.create(testFilm);
         Film checkFilm = new Film("Test", "a".repeat(200),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112,
+                Set.of(Long.valueOf("2")), "PG-13");
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, testFilm);
     }
@@ -73,10 +79,12 @@ public class InMemoryFilmStorageTests {
     @Test
     public void testCreateFilmWithDescription199Characters() {
         Film testFilm = new Film("Test", "a".repeat(199),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112,
+                Set.of(Long.valueOf("2")), "PG-13");
         filmStorage.create(testFilm);
         Film checkFilm = new Film("Test", "a".repeat(199),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112,
+                Set.of(Long.valueOf("2")), "PG-13");
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, testFilm);
     }

@@ -31,11 +31,11 @@ public class Film {
 
     private Set<Long> likes;
 
-    private List<String> genre;
+    private Set<Long> genre;
 
     private String rating;
 
-    public Film(String name, String description, LocalDate releaseDate, int duration, List<String> genre,
+    public Film(String name, String description, LocalDate releaseDate, int duration, Set<Long> genre,
                 String rating) {
         this.name = name;
         this.description = description;
