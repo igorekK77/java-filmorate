@@ -32,6 +32,9 @@ public class UserDbStorage implements UserStorage{
             "WHERE user_id = ?;";
     private final String QUERY_FOR_GET_USER_BY_ID = "SELECT * FROM users WHERE user_id = ?;";
     private final String QUERY_GET_ALL_USER = "SELECT * FROM users;";
+    private final String QUERY_FOR_GET_FRIEND_AND_STATUS = "SELECT friend_id, status FROM user_friends WHERE " +
+            "user_id = ?;";
+    private final String QUERY_FOR_GET_ALL_USER_ID = "SELECT user_id FROM users";
 
     @Autowired
     public UserDbStorage (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
@@ -52,7 +55,7 @@ public class UserDbStorage implements UserStorage{
         }
         if (user.getName() == null) {
             user.setName(user.getLogin());
-            log.info("Имя пользователя отсутствует, новое имя пользвателя: {}", user.getName());
+            log.info("Имя пользователя отсутствует, новое имя пользвателя: {}", user.getLogin());
         }
         if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
             log.error("Дата рождения не может быть в будущем");
@@ -85,12 +88,13 @@ public class UserDbStorage implements UserStorage{
             throw new ValidationException("Id должен быть указан");
         }
 
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, newUser.getId());
-
-        if (user == null) {
+        if (!isIdUsersInDatabase(newUser.getId())) {
             throw new NotFoundException("Пользователь с ID = " + newUser.getId() + " не найден!");
         }
-        if (!user.getEmail().equals(newUser.getEmail()) && newUser.getEmail() != null) {
+
+        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, newUser.getId());
+
+        if (newUser.getEmail() != null && !user.getEmail().equals(newUser.getEmail())) {
             user.setEmail(newUser.getEmail());
         }
         if (newUser.getName() != null && !newUser.getName().equals(user.getName())) {
@@ -121,26 +125,30 @@ public class UserDbStorage implements UserStorage{
     @Override
     public Collection<User> allUser() {
         List<User> users = jdbcTemplate.query(QUERY_GET_ALL_USER, mapper);
-        users.forEach(user -> user.setFriends(getUserFriendsFromDB(user.getId())));
+
         return users;
     }
 
     @Override
     public User getUserById(Long id) {
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
-        if (user == null) {
+        if (!isIdUsersInDatabase(id)) {
             throw new NotFoundException("Пользователь с ID = " + id + " не найден!");
         }
+        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
         user.setFriends(getUserFriendsFromDB(user.getId()));
         return user;
     }
 
     public Map<Long, String> getUserFriendsFromDB(Long id) {
-        getUserById(id);
         Map<Long, String> friends = new HashMap<>();
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_USER_BY_ID, userFriendsMapper, id);
+        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
         userFriends.forEach(userFriend-> friends.put(userFriend.getId(), userFriend.getStatus()));
         return friends;
+    }
+
+    private boolean isIdUsersInDatabase(Long id) {
+        List<Long> allId = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_USER_ID, Long.class);
+        return allId.contains(id);
     }
 
 }

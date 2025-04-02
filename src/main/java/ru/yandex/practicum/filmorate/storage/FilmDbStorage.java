@@ -15,10 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Slf4j
@@ -26,17 +23,18 @@ import java.util.Set;
 public class FilmDbStorage implements FilmStorage{
     private FilmRowMapper mapper;
     private JdbcTemplate jdbcTemplate;
-    private final String QUERY_FOR_CREATE_FILMS = "INSERT INTO film (name, description, release_date, duration, " +
-            "rating) VALUES (?, ?, ?, ?, ?);";
+    private final String QUERY_FOR_CREATE_FILMS = "INSERT INTO film (name, description, release_date, duration) " +
+            " VALUES (?, ?, ?, ?);";
     private final String QUERY_FOR_GET_FILM_BY_ID = "SELECT * FROM film WHERE film_id = ?;";
     private final String QUERY_FOR_UPDATE_FILM = "UPDATE film SET name = ?, description = ?, release_date = ?, " +
-            "duration = ?, rating = ? WHERE film_id = ?;";
+            "duration = ?, rating_id = ? WHERE film_id = ?;";
     private final String QUERY_FOR_ADD_GENRE = "INSERT INTO film_genre (film_id, genre_id) " +
             "VALUES (?, ?)";
     private final String QUERY_FOR_DELETE_GENRE = "DELETE FROM film_genre WHERE film_id = ?";
     private final String QUERY_FOR_GET_FILM_GENRE = "SELECT genre_id FROM film_genre WHERE film_id = ?;";
     private final String QUERY_FOR_GET_FILM_LIKES = "SELECT user_id FROM likes WHERE film_id = ?;";
     private final String QUERY_FOR_GET_ALL_FILM = "SELECT * FROM film;";
+    private final String QUERY_FOR_GET_RATING_ID = "SELECT rating_id FROM rating WHERE name = ?";
 
     @Autowired
     public FilmDbStorage(FilmRowMapper mapper, JdbcTemplate jdbcTemplate) {
@@ -70,21 +68,10 @@ public class FilmDbStorage implements FilmStorage{
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setTimestamp(3, Timestamp.valueOf(film.getReleaseDate().atStartOfDay()));
+            ps.setInt(4, film.getDuration());
             return ps;
         }, keyHolder);
 
-        Set<Long> genre = film.getGenre();
-        if (!genre.isEmpty()) {
-            genre.forEach(genreId -> {
-                jdbcTemplate.update(connection -> {
-                    PreparedStatement preparedStatement = connection.prepareStatement(QUERY_FOR_ADD_GENRE);
-                    preparedStatement.setLong(1, film.getId());
-                    preparedStatement.setLong(2, genreId);
-                    return preparedStatement;
-                });
-            });
-
-        }
         Long id = keyHolder.getKeyAs(Long.class);
 
         film.setId(id);
@@ -124,9 +111,19 @@ public class FilmDbStorage implements FilmStorage{
         if (newFilm.getRating() != null && !newFilm.getRating().equals(film.getRating())) {
             film.setRating(newFilm.getRating());
         }
+        Integer rating_id = jdbcTemplate.queryForObject(QUERY_FOR_GET_RATING_ID, Integer.class, newFilm.getRating());
+        if (newFilm.getRating() != null && !newFilm.getRating().equals(film.getRating())) {
+            if (rating_id == null) {
+                rating_id = jdbcTemplate.queryForObject(QUERY_FOR_GET_RATING_ID, Integer.class, film.getRating());
+                throw new NotFoundException("Рейтинга " + film.getRating() + " не существет!");
+            }
+            film.setRating(newFilm.getRating());
+        }
+
+
 
         int countRow = jdbcTemplate.update(QUERY_FOR_UPDATE_FILM, film.getName(), film.getDescription(),
-                film.getReleaseDate(), film.getDuration(), film.getRating(), film.getId());
+                film.getReleaseDate(), film.getDuration(), rating_id, film.getId());
 
         if (countRow == 0) {
             throw new ValidationException("Не удалось обновить данные");

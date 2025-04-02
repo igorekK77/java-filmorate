@@ -1,20 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.controller.FilmRatingComparator;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmRepository;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 
 @Service
-@Slf4j
 public class FilmService {
     private final FilmStorage filmStorage;
     private final FilmRepository filmRepository;
@@ -50,14 +44,6 @@ public class FilmService {
 
     public List<Film> getTopFilmsByLikes(int count) {
         return filmRepository.getTopFilmsByLikes(count);
-    }
-
-    public List<String> allGenre() {
-        return filmRepository.allGenre();
-    }
-
-    public String getGenreById(int id) {
-        return filmRepository.getGenreById(id);
     }
 
 }

@@ -24,6 +24,9 @@ public class UserRepository {
             "VALUES (?, ?, " + "'" + Status.UNCONFIRMED + "'" + ");";
     private final String QUERY_DELETE_USER_FRIENDS = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?;";
     private final String QUERY_FOR_GET_USER_BY_ID = "SELECT * FROM users WHERE user_id = ?;";
+    private final String QUERY_FOR_GET_FRIEND_AND_STATUS = "SELECT friend_id, status FROM user_friends WHERE " +
+            "user_id = ?;";
+    private final String QUERY_FOR_GET_ALL_USER_ID = "SELECT user_id FROM users";
 
     @Autowired
     public UserRepository (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
@@ -33,9 +36,8 @@ public class UserRepository {
     }
 
     private Map<Long, String> getUserFriendsFromDB(Long id) {
-        getUserById(id);
         Map<Long, String> friends = new HashMap<>();
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_USER_BY_ID, userFriendsMapper, id);
+        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
         userFriends.forEach(userFriend-> friends.put(userFriend.getId(), userFriend.getStatus()));
         return friends;
     }
@@ -116,11 +118,16 @@ public class UserRepository {
     }
 
     private User getUserById(Long id) {
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
-        if (user == null) {
+        if (!isIdUsersInDatabase(id)) {
             throw new NotFoundException("Пользователь с ID = " + id + " не найден!");
         }
+        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
         user.setFriends(getUserFriendsFromDB(user.getId()));
         return user;
+    }
+
+    private boolean isIdUsersInDatabase(Long id) {
+        List<Long> allId = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_USER_ID, Long.class);
+        return allId.contains(id);
     }
 }

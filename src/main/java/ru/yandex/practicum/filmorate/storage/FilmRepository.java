@@ -24,14 +24,12 @@ public class FilmRepository {
     private final UserDbStorage userDbStorage;
     private final FilmLikesMapper filmLikesMapper;
     private final String QUERY_FOR_GET_FILM_BY_ID = "SELECT * FROM film WHERE film_id = ?;";
-    private final String QUERY_FOR_ADD_NEW_LIKE = "INSERT INTO like (film_id, user_id) " +
+    private final String QUERY_FOR_ADD_NEW_LIKE = "INSERT INTO likes (film_id, user_id) " +
             "VALUES (?, ?);";
     private final String QUERY_FOR_GET_FILM_LIKES = "SELECT user_id FROM likes WHERE film_id = ?;";
-    private final String QUERY_FOR_DELETE_LIKES = "DELETE FROM like WHERE film_id = ? AND user_id = ?;";
+    private final String QUERY_FOR_DELETE_LIKES = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
     private final String QUERY_FOR_GET_COUNT_LIKES = "SELECT film_id, COUNT(user_id) AS count_likes " +
             "FROM likes GROUP BY film_id;";
-    private final String QUERY_FOR_GET_GENRE = "SELECT name FROM genre";
-    private final String QUERY_FOR_GET_GENRE_BY_ID = "SELECT name FROM genre WHERE genre_id = ?;";
 
     @Autowired
     public FilmRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserDbStorage userDbStorage,
@@ -86,18 +84,6 @@ public class FilmRepository {
         return filmLikes.stream()
                 .map(filmLikes1 -> getFilmById(filmLikes1.getFilmId()))
                 .toList();
-    }
-
-    public List<String> allGenre() {
-        return jdbcTemplate.queryForList(QUERY_FOR_GET_GENRE, String.class);
-    }
-
-    public String getGenreById(int id) {
-        String genre = jdbcTemplate.queryForObject(QUERY_FOR_GET_GENRE_BY_ID, String.class, id);
-        if (genre == null) {
-            throw new NotFoundException("Жанра с таким ID не существует!");
-        }
-        return genre;
     }
 
     private Film getFilmById(Long id) {
