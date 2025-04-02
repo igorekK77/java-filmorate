@@ -22,7 +22,7 @@ public class User {
 
     private LocalDate birthday;
 
-    private Map<Long, String> friends;
+    private Map<Long, String> friends; //создать dto для получение объекта с полями id и статус
 
     public User(String email, String login, String name, LocalDate birthday) {
         this.email = email;

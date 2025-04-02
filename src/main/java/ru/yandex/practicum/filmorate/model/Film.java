@@ -5,9 +5,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.dto.Genre;
+import ru.yandex.practicum.filmorate.dto.Rating;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -30,19 +33,22 @@ public class Film {
 
     private Set<Long> likes;
 
-    private Set<Long> genre;
+    private List<Genre> genres;
 
-    private String rating;
+    private Rating mpa;
 
-    public Film(String name, String description, LocalDate releaseDate, int duration, Set<Long> genre,
-                String rating) {
+    public Film(String name, String description, LocalDate releaseDate, int duration, List<Genre> genres,
+                Rating mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
         likes = new HashSet<>();
-        this.rating = rating;
-        this.genre = genre;
+        this.mpa = mpa;
+        this.genres = genres;
     }
 
 }
+
+
+

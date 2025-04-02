@@ -44,7 +44,7 @@ public class FilmRepository {
         Film film = getFilmById(filmId);
         User user = userDbStorage.getUserById(userId);
         Set<Long> likes = getFilmLikes(filmId);
-        if (likes.contains(filmId)) {
+        if (likes.contains(userId)) {
             throw new ValidationException("Пользователь с ID = " + userId + " уже поставил лайк фильму с ID = " +
                     filmId);
         }
@@ -52,7 +52,12 @@ public class FilmRepository {
         if (rowCount == 0) {
             throw new ValidationException("Не удалось добавить лайк!");
         }
-        film.getLikes().add(userId);
+        if (film.getLikes() == null) {
+            film.setLikes(new HashSet<>());
+            film.getLikes().add(userId);
+        } else {
+            film.getLikes().add(userId);
+        }
         return film;
     }
 
@@ -64,6 +69,7 @@ public class FilmRepository {
             log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
             throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
         }
+        film.setLikes(likes);
         int rowCount = jdbcTemplate.update(QUERY_FOR_DELETE_LIKES, filmId, userId);
         if (rowCount == 0) {
             throw new ValidationException("Не удалось добавить лайк!");

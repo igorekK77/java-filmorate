@@ -81,10 +81,7 @@ public class UserRepository {
         if (rowCountWhoAdding == 0) {
             throw new ValidationException("Не удалось добавить пользователя в список друзей!");
         }
-        int rowCountWhomAdding = jdbcTemplate.update(QUERY_ADDING_USER_FRIENDS, userWhomAddedId, userWhoAddedId);
-        if (rowCountWhomAdding == 0) {
-            throw new ValidationException("Не удалось добавить пользователя в список друзей!");
-        }
+
         userWhoAdded.setFriends(getUserFriendsFromDB(userWhoAddedId));
         return userWhoAdded;
     }
