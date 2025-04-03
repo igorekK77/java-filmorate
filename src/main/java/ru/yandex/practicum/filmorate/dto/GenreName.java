@@ -1,10 +1,14 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GenreName {
-    private final int id;
-    private final String name;
+    private int id;
+    private String name;
 }
 

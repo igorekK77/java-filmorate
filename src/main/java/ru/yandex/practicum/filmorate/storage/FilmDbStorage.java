@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dto.Genre;
+import ru.yandex.practicum.filmorate.dto.GenreName;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -34,10 +35,9 @@ public class FilmDbStorage implements FilmStorage{
     private final String QUERY_FOR_DELETE_GENRE = "DELETE FROM film_genre WHERE film_id = ?";
     private final String QUERY_FOR_GET_FILM_GENRE = "SELECT genre_id FROM film_genre WHERE film_id = ?;";
     private final String QUERY_FOR_GET_ALL_GENRE = "SELECT genre_id FROM genre";
-    private final String QUERY_FOR_GET_FILM_LIKES = "SELECT user_id FROM likes WHERE film_id = ?;";
     private final String QUERY_FOR_GET_ALL_FILM = "SELECT * FROM film;";
-    private final String QUERY_FOR_GET_RATING_ID = "SELECT rating_id FROM rating WHERE name = ?";
     private final String QUERY_FOR_GET_ALL_RATING_ID = "SELECT rating_id FROM rating";
+    private final String QUERY_FOR_GET_NAME_GENRE_BY_GENRE_ID = "SELECT name FROM genre WHERE genre_id = ?";
 
     @Autowired
     public FilmDbStorage(FilmRowMapper mapper, JdbcTemplate jdbcTemplate) {
@@ -88,7 +88,7 @@ public class FilmDbStorage implements FilmStorage{
 
         if (film.getGenres() != null) {
             List<Integer> allGenre = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_GENRE, Integer.class);
-            List<Genre> genreFromFilm = film.getGenres();
+            List<GenreName> genreFromFilm = film.getGenres();
             List<Integer> addGenreIdCheck = new ArrayList<>();
             genreFromFilm.forEach(genre -> {
                 if (!allGenre.contains(genre.getId())) {
@@ -107,7 +107,7 @@ public class FilmDbStorage implements FilmStorage{
         } else {
             film.setGenres(new ArrayList<>());
         }
-
+        log.info("Создан фильм: {}", film);
         return film;
     }
 
@@ -122,7 +122,7 @@ public class FilmDbStorage implements FilmStorage{
         if (newFilm.getName() != null && !newFilm.getName().equals(film.getName())) {
             film.setName(newFilm.getName());
         }
-        if (newFilm.getDescription() != null && newFilm.getDescription().equals(film.getDescription())) {
+        if (newFilm.getDescription() != null && !newFilm.getDescription().equals(film.getDescription())) {
             if (newFilm.getDescription().length() > 200) {
                 log.error("Максимальная длина описания — 200 символов");
                 throw new ValidationException("Максимальная длина описания — 200 символов");
@@ -171,7 +171,7 @@ public class FilmDbStorage implements FilmStorage{
             });
             film.setGenres(newFilm.getGenres());
         }
-
+        log.info("Обновлен фильм: {}", film);
         return film;
     }
 
@@ -182,12 +182,15 @@ public class FilmDbStorage implements FilmStorage{
         return allFilm;
     }
 
-    private List<Genre> getGenreByFilm(Long film_id) {
+    private List<GenreName> getGenreByFilm(Long film_id) {
         List<Integer> allGenre = getFilmGenre(film_id);
         return allGenre.stream()
                 .map(genre_id -> {
-                    Genre genre = new Genre();
+                    GenreName genre = new GenreName();
                     genre.setId(genre_id);
+                    String genreName = jdbcTemplate.queryForObject(QUERY_FOR_GET_NAME_GENRE_BY_GENRE_ID, String.class,
+                            genre_id);
+                    genre.setName(genreName);
                     return genre;
                 })
                 .toList();

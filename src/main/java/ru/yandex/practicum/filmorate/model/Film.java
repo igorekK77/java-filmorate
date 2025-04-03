@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.dto.Genre;
-import ru.yandex.practicum.filmorate.dto.Rating;
+import ru.yandex.practicum.filmorate.dto.GenreName;
+import ru.yandex.practicum.filmorate.dto.RatingName;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -33,12 +33,12 @@ public class Film {
 
     private Set<Long> likes;
 
-    private List<Genre> genres;
+    private List<GenreName> genres;
 
-    private Rating mpa;
+    private RatingName mpa;
 
-    public Film(String name, String description, LocalDate releaseDate, int duration, List<Genre> genres,
-                Rating mpa) {
+    public Film(String name, String description, LocalDate releaseDate, int duration, List<GenreName> genres,
+                RatingName mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
