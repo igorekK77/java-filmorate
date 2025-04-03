@@ -25,9 +25,9 @@ public class RatingController {
         return ratingService.allRating();
     }
 
-    @RequestMapping("/{rating_id}")
+    @RequestMapping("/{ratingId}")
     @GetMapping
-    public RatingName getRatingById(@PathVariable int rating_id) {
-        return ratingService.getRatingById(rating_id);
+    public RatingName getRatingById(@PathVariable int ratingId) {
+        return ratingService.getRatingById(ratingId);
     }
 }
