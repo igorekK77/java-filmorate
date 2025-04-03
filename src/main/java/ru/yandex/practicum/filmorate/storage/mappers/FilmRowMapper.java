@@ -11,7 +11,9 @@ import java.sql.Timestamp;
 
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
+
     private final JdbcTemplate jdbcTemplate;
+
     private final String queryForGetNameRatingByRatingId = "SELECT name FROM rating WHERE rating_id = ?";
     public FilmRowMapper(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
