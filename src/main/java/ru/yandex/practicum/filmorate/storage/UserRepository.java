@@ -102,15 +102,11 @@ public class UserRepository {
         if (!isUserHasFriends) {
             log.error("Пользователь с ID = {} не добавлял в друзья пользователя с Id = {}",
                     idWhoDeleted, idWhomDeleted);
-            throw new ValidationException("Пользователь с ID = " + idWhoDeleted + " не добавлял в друзья " +
-                    "пользователя с Id = " + idWhomDeleted);
+
         }
 
         int rowCountWhoDelete =  jdbcTemplate.update(QUERY_DELETE_USER_FRIENDS, idWhoDeleted, idWhomDeleted);
-        if (rowCountWhoDelete == 0) {
-            throw new ValidationException("Не удалось удалить пользователя c ID = " + idWhomDeleted + " из списка " +
-                    "друзей!");
-        }
+
 
         userWhoDeleted.setFriends(getUserFriendsFromDB(idWhoDeleted));
 
