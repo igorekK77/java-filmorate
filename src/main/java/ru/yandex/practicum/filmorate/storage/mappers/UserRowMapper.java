@@ -1,18 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.mappers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.dto.UserFriends;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Component
 public class UserRowMapper implements RowMapper<User> {
