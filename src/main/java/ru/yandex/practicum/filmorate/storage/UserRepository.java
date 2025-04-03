@@ -35,46 +35,43 @@ public class UserRepository {
         this.userFriendsMapper = userFriendsMapper;
     }
 
-    private Map<Long, String> getUserFriendsFromDB(Long id) {
-        Map<Long, String> friends = new HashMap<>();
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
-        userFriends.forEach(userFriend-> friends.put(userFriend.getId(), userFriend.getStatus()));
-        return friends;
+    private List<UserFriends> getUserFriendsFromDB(Long id) {
+        return jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
+
     }
 
     public List<User> printListUserFriends(Long id) {
         getUserById(id);
-        Map<Long, String> friends = new HashMap<>();
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_USER_BY_ID, userFriendsMapper, id);
-        userFriends.forEach(userFriend-> friends.put(userFriend.getId(), userFriend.getStatus()));
-        List<User> commonFriends = new ArrayList<>();
-        friends.keySet().forEach(userId -> commonFriends.add(getUserById(userId)));
-        return commonFriends;
+        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
+        return userFriends.stream()
+                .map(userFriend -> getUserById(userFriend.getId()))
+                .toList();
     }
 
     public List<User> printListCommonFriends(Long idFirstUser, Long idSecondUser) {
         getUserById(idFirstUser);
         getUserById(idSecondUser);
-        Set<Long> listFriendsFirstUser = getUserFriendsFromDB(idFirstUser).keySet();
-        Set<Long> listFriendsSecondUser = getUserFriendsFromDB(idSecondUser).keySet();
+        List<UserFriends> listFriendsFirstUser = getUserFriendsFromDB(idFirstUser);
+        List<UserFriends> listFriendsSecondUser = getUserFriendsFromDB(idSecondUser);
         listFriendsFirstUser.retainAll(listFriendsSecondUser);
-        List<User> commonFriends = new ArrayList<>();
-        listFriendsFirstUser.forEach(id -> commonFriends.add(getUserById(id)));
-        return commonFriends;
+        return listFriendsFirstUser.stream()
+                .map(userFriend -> getUserById(userFriend.getId()))
+                .toList();
     }
 
     public User addFriend(Long userWhoAddedId, Long userWhomAddedId) {
         User userWhoAdded = getUserById(userWhoAddedId);
         User userWhomAdded = getUserById(userWhomAddedId);
 
-        Set<Long> friendsUserWhoAdded = getUserFriendsFromDB(userWhoAddedId).keySet();
-        Set<Long> friendsUserWhomAdded = getUserFriendsFromDB(userWhomAddedId).keySet();
+        List<UserFriends> friendsUserWhoAdded = getUserFriendsFromDB(userWhoAddedId);
 
-        if (friendsUserWhoAdded.contains(userWhomAddedId) && friendsUserWhomAdded.contains(userWhoAddedId)) {
-            log.error("Пользователь с Id = {} уже добавил в друзья пользователяс Id = {}",
-                    userWhomAddedId, userWhoAddedId);
-            throw new ValidationException("Пользователь с Id = " + userWhomAddedId + " уже добавил в друзья пользователя" +
-                    "с Id = " + userWhoAddedId);
+        for (UserFriends userFriends: friendsUserWhoAdded) {
+            if (userFriends.getId().equals(userWhomAddedId)) {
+                log.error("Пользователь с Id = {} уже добавил в друзья пользователя с Id = {}",
+                        userWhomAddedId, userWhoAddedId);
+                throw new ValidationException("Пользователь с Id = " + userWhomAddedId + " уже добавил в друзья пользователя" +
+                        "с Id = " + userWhoAddedId);
+            }
         }
 
         int rowCountWhoAdding = jdbcTemplate.update(QUERY_ADDING_USER_FRIENDS, userWhoAddedId, userWhomAddedId);
@@ -90,10 +87,19 @@ public class UserRepository {
         User userWhoDeleted = getUserById(idWhoDeleted);
         User userWhomDeleted = getUserById(idWhomDeleted);
 
-        Set<Long> friendsUserWhoAdded = getUserFriendsFromDB(idWhoDeleted).keySet();
-        Set<Long> friendsUserWhomAdded = getUserFriendsFromDB(idWhomDeleted).keySet();
+        List<UserFriends> friendsUserWhoAdded = getUserFriendsFromDB(idWhoDeleted);
+        List<UserFriends> friendsUserWhomAdded = getUserFriendsFromDB(idWhomDeleted);
 
-        if (!friendsUserWhoAdded.contains(idWhomDeleted) && !friendsUserWhomAdded.contains(idWhoDeleted)) {
+        boolean isUserHasFriends = false;
+
+        for (UserFriends userFriends: friendsUserWhoAdded) {
+            if (userFriends.getId().equals(idWhomDeleted)) {
+                isUserHasFriends = true;
+                break;
+            }
+        }
+
+        if (!isUserHasFriends) {
             log.error("Пользователь с ID = {} не добавлял в друзья пользователя с Id = {}",
                     idWhoDeleted, idWhomDeleted);
             throw new ValidationException("Пользователь с ID = " + idWhoDeleted + " не добавлял в друзья " +
@@ -102,13 +108,10 @@ public class UserRepository {
 
         int rowCountWhoDelete =  jdbcTemplate.update(QUERY_DELETE_USER_FRIENDS, idWhoDeleted, idWhomDeleted);
         if (rowCountWhoDelete == 0) {
-            throw new ValidationException("Не удалось удалить пользователя из списа друзей!");
+            throw new ValidationException("Не удалось удалить пользователя c ID = " + idWhomDeleted + " из списка " +
+                    "друзей!");
         }
 
-        int rowCountWhomDelete = jdbcTemplate.update(QUERY_DELETE_USER_FRIENDS, idWhomDeleted, idWhoDeleted);
-        if (rowCountWhomDelete == 0) {
-            throw new ValidationException("Не удалось удалить пользователя из списа друзей!");
-        }
         userWhoDeleted.setFriends(getUserFriendsFromDB(idWhoDeleted));
 
         return userWhoDeleted;

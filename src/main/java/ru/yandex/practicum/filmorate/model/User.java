@@ -3,9 +3,12 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.dto.UserFriends;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -22,14 +25,14 @@ public class User {
 
     private LocalDate birthday;
 
-    private Map<Long, String> friends; //создать dto для получение объекта с полями id и статус
+    private List<UserFriends> friends;
 
     public User(String email, String login, String name, LocalDate birthday) {
         this.email = email;
         this.login = login;
         this.name = name;
         this.birthday = birthday;
-        friends = new HashMap<>();
+        friends = new ArrayList<>();
     }
 
     public User() {

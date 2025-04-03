@@ -139,11 +139,8 @@ public class UserDbStorage implements UserStorage{
         return user;
     }
 
-    public Map<Long, String> getUserFriendsFromDB(Long id) {
-        Map<Long, String> friends = new HashMap<>();
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
-        userFriends.forEach(userFriend-> friends.put(userFriend.getId(), userFriend.getStatus()));
-        return friends;
+    public List<UserFriends> getUserFriendsFromDB(Long id) {
+        return jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
     }
 
     private boolean isIdUsersInDatabase(Long id) {
