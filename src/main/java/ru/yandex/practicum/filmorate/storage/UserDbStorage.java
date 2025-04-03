@@ -26,15 +26,15 @@ public class UserDbStorage implements UserStorage{
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper mapper;
     private final UserFriendsMapper userFriendsMapper;
-    private final String QUERY_FOR_CREATE_USER = "INSERT INTO users (email, login, name, birthday) " +
+    private final String queryForCreateUser = "INSERT INTO users (email, login, name, birthday) " +
             "VALUES (?, ?, ?, ?);";
-    private final String QUERY_FOR_UPDATE_USER = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? " +
+    private final String queryForUpdateUser = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? " +
             "WHERE user_id = ?;";
-    private final String QUERY_FOR_GET_USER_BY_ID = "SELECT * FROM users WHERE user_id = ?;";
-    private final String QUERY_GET_ALL_USER = "SELECT * FROM users;";
-    private final String QUERY_FOR_GET_FRIEND_AND_STATUS = "SELECT friend_id, status FROM user_friends WHERE " +
+    private final String queryForGetUserById = "SELECT * FROM users WHERE user_id = ?;";
+    private final String queryGetAllUser = "SELECT * FROM users;";
+    private final String queryForGetFriendAndStatus = "SELECT friend_id, status FROM user_friends WHERE " +
             "user_id = ?;";
-    private final String QUERY_FOR_GET_ALL_USER_ID = "SELECT user_id FROM users";
+    private final String queryForGetAllUserId = "SELECT user_id FROM users";
 
     @Autowired
     public UserDbStorage (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
@@ -63,7 +63,7 @@ public class UserDbStorage implements UserStorage{
         }
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(QUERY_FOR_CREATE_USER, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = connection.prepareStatement(queryForCreateUser, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getLogin());
             ps.setString(3, user.getName());
@@ -92,7 +92,7 @@ public class UserDbStorage implements UserStorage{
             throw new NotFoundException("Пользователь с ID = " + newUser.getId() + " не найден!");
         }
 
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, newUser.getId());
+        User user = jdbcTemplate.queryForObject(queryForGetUserById, mapper, newUser.getId());
 
         if (newUser.getEmail() != null && !user.getEmail().equals(newUser.getEmail())) {
             user.setEmail(newUser.getEmail());
@@ -113,7 +113,7 @@ public class UserDbStorage implements UserStorage{
             }
         }
 
-        int userUpdateRow = jdbcTemplate.update(QUERY_FOR_UPDATE_USER, user.getEmail(), user.getLogin(),
+        int userUpdateRow = jdbcTemplate.update(queryForUpdateUser, user.getEmail(), user.getLogin(),
                 user.getName(), user.getBirthday(), user.getId());
 
         if (userUpdateRow == 0) {
@@ -124,7 +124,7 @@ public class UserDbStorage implements UserStorage{
 
     @Override
     public Collection<User> allUser() {
-        List<User> users = jdbcTemplate.query(QUERY_GET_ALL_USER, mapper);
+        List<User> users = jdbcTemplate.query(queryGetAllUser, mapper);
         users.forEach(user -> user.setFriends(getUserFriendsFromDB(user.getId())));
         return users;
     }
@@ -134,17 +134,17 @@ public class UserDbStorage implements UserStorage{
         if (!isIdUsersInDatabase(id)) {
             throw new NotFoundException("Пользователь с ID = " + id + " не найден!");
         }
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
+        User user = jdbcTemplate.queryForObject(queryForGetUserById, mapper, id);
         user.setFriends(getUserFriendsFromDB(user.getId()));
         return user;
     }
 
     public List<UserFriends> getUserFriendsFromDB(Long id) {
-        return jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
+        return jdbcTemplate.query(queryForGetFriendAndStatus, userFriendsMapper, id);
     }
 
     private boolean isIdUsersInDatabase(Long id) {
-        List<Long> allId = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_USER_ID, Long.class);
+        List<Long> allId = jdbcTemplate.queryForList(queryForGetAllUserId, Long.class);
         return allId.contains(id);
     }
 

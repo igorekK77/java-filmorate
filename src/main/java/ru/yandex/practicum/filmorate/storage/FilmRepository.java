@@ -23,12 +23,12 @@ public class FilmRepository {
     private final FilmRowMapper mapper;
     private final UserDbStorage userDbStorage;
     private final FilmLikesMapper filmLikesMapper;
-    private final String QUERY_FOR_GET_FILM_BY_ID = "SELECT * FROM film WHERE film_id = ?;";
-    private final String QUERY_FOR_ADD_NEW_LIKE = "INSERT INTO likes (film_id, user_id) " +
+    private final String queryForGetFilmById = "SELECT * FROM film WHERE film_id = ?;";
+    private final String queryForAddNewLike = "INSERT INTO likes (film_id, user_id) " +
             "VALUES (?, ?);";
-    private final String QUERY_FOR_GET_FILM_LIKES = "SELECT user_id FROM likes WHERE film_id = ?;";
-    private final String QUERY_FOR_DELETE_LIKES = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
-    private final String QUERY_FOR_GET_COUNT_LIKES = "SELECT film_id, COUNT(user_id) AS count_likes " +
+    private final String queryForGetFilmLikes = "SELECT user_id FROM likes WHERE film_id = ?;";
+    private final String queryForDeleteLikes = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
+    private final String queryForGetCountLikes = "SELECT film_id, COUNT(user_id) AS count_likes " +
             "FROM likes GROUP BY film_id;";
 
     @Autowired
@@ -48,7 +48,7 @@ public class FilmRepository {
             throw new ValidationException("Пользователь с ID = " + userId + " уже поставил лайк фильму с ID = " +
                     filmId);
         }
-        int rowCount = jdbcTemplate.update(QUERY_FOR_ADD_NEW_LIKE, filmId, userId);
+        int rowCount = jdbcTemplate.update(queryForAddNewLike, filmId, userId);
         if (rowCount == 0) {
             throw new ValidationException("Не удалось добавить лайк!");
         }
@@ -70,7 +70,7 @@ public class FilmRepository {
             throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
         }
         film.setLikes(likes);
-        int rowCount = jdbcTemplate.update(QUERY_FOR_DELETE_LIKES, filmId, userId);
+        int rowCount = jdbcTemplate.update(queryForDeleteLikes, filmId, userId);
         if (rowCount == 0) {
             throw new ValidationException("Не удалось добавить лайк!");
         }
@@ -79,7 +79,7 @@ public class FilmRepository {
     }
 
     public List<Film> getTopFilmsByLikes(int count) {
-        List<FilmLikes> filmLikes = jdbcTemplate.query(QUERY_FOR_GET_COUNT_LIKES, filmLikesMapper);
+        List<FilmLikes> filmLikes = jdbcTemplate.query(queryForGetCountLikes, filmLikesMapper);
         if (count > filmLikes.size()) {
             count = filmLikes.size();
         }
@@ -93,7 +93,7 @@ public class FilmRepository {
     }
 
     private Film getFilmById(Long id) {
-        Film film = jdbcTemplate.queryForObject(QUERY_FOR_GET_FILM_BY_ID, mapper, id);
+        Film film = jdbcTemplate.queryForObject(queryForGetFilmById, mapper, id);
         if (film == null) {
             log.error("Фильма с Id = {} не существует", id);
             throw new NotFoundException("Фильма с ID = " + id + " не существует!");
@@ -102,7 +102,7 @@ public class FilmRepository {
     }
 
     private Set<Long> getFilmLikes(Long film_id) {
-        List<Long> getAllGenre = jdbcTemplate.queryForList(QUERY_FOR_GET_FILM_LIKES, Long.class, film_id);
+        List<Long> getAllGenre = jdbcTemplate.queryForList(queryForGetFilmLikes, Long.class, film_id);
         return new HashSet<>(getAllGenre);
     }
 }

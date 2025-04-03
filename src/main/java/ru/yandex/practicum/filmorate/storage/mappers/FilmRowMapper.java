@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
     private final JdbcTemplate jdbcTemplate;
-    private final String QUERY_FOR_GET_NAME_RATING_BY_RATING_ID = "SELECT name FROM rating WHERE rating_id = ?";
+    private final String queryForGetNameRatingByRatingId = "SELECT name FROM rating WHERE rating_id = ?";
     public FilmRowMapper(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -22,7 +22,7 @@ public class FilmRowMapper implements RowMapper<Film> {
         Film film = new Film();
         RatingName rating = new RatingName();
         rating.setId(resultSet.getInt("rating_id"));
-        String genreName = jdbcTemplate.queryForObject(QUERY_FOR_GET_NAME_RATING_BY_RATING_ID, String.class,
+        String genreName = jdbcTemplate.queryForObject(queryForGetNameRatingByRatingId, String.class,
                 rating.getId());
         rating.setName(genreName);
         film.setId(resultSet.getLong("film_id"));

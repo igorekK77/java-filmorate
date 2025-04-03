@@ -20,13 +20,13 @@ public class UserRepository {
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper mapper;
     private final UserFriendsMapper userFriendsMapper;
-    private final String QUERY_ADDING_USER_FRIENDS = "INSERT INTO user_friends (user_id, friend_id, status) " +
+    private final String queryAddingUserFriends = "INSERT INTO user_friends (user_id, friend_id, status) " +
             "VALUES (?, ?, " + "'" + Status.UNCONFIRMED + "'" + ");";
-    private final String QUERY_DELETE_USER_FRIENDS = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?;";
-    private final String QUERY_FOR_GET_USER_BY_ID = "SELECT * FROM users WHERE user_id = ?;";
-    private final String QUERY_FOR_GET_FRIEND_AND_STATUS = "SELECT friend_id, status FROM user_friends WHERE " +
+    private final String queryDeleteUserFriends = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?;";
+    private final String queryForGetUserById = "SELECT * FROM users WHERE user_id = ?;";
+    private final String queryForGetFriendAndStatus = "SELECT friend_id, status FROM user_friends WHERE " +
             "user_id = ?;";
-    private final String QUERY_FOR_GET_ALL_USER_ID = "SELECT user_id FROM users";
+    private final String queryForGetAllUserId = "SELECT user_id FROM users";
 
     @Autowired
     public UserRepository (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
@@ -36,13 +36,13 @@ public class UserRepository {
     }
 
     private List<UserFriends> getUserFriendsFromDB(Long id) {
-        return jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
+        return jdbcTemplate.query(queryForGetFriendAndStatus, userFriendsMapper, id);
 
     }
 
     public List<User> printListUserFriends(Long id) {
         getUserById(id);
-        List<UserFriends> userFriends = jdbcTemplate.query(QUERY_FOR_GET_FRIEND_AND_STATUS, userFriendsMapper, id);
+        List<UserFriends> userFriends = jdbcTemplate.query(queryForGetFriendAndStatus, userFriendsMapper, id);
         return userFriends.stream()
                 .map(userFriend -> getUserById(userFriend.getId()))
                 .toList();
@@ -74,7 +74,7 @@ public class UserRepository {
             }
         }
 
-        int rowCountWhoAdding = jdbcTemplate.update(QUERY_ADDING_USER_FRIENDS, userWhoAddedId, userWhomAddedId);
+        int rowCountWhoAdding = jdbcTemplate.update(queryAddingUserFriends, userWhoAddedId, userWhomAddedId);
         if (rowCountWhoAdding == 0) {
             throw new ValidationException("Не удалось добавить пользователя в список друзей!");
         }
@@ -105,7 +105,7 @@ public class UserRepository {
 
         }
 
-        int rowCountWhoDelete =  jdbcTemplate.update(QUERY_DELETE_USER_FRIENDS, idWhoDeleted, idWhomDeleted);
+        int rowCountWhoDelete =  jdbcTemplate.update(queryDeleteUserFriends, idWhoDeleted, idWhomDeleted);
 
 
         userWhoDeleted.setFriends(getUserFriendsFromDB(idWhoDeleted));
@@ -117,13 +117,13 @@ public class UserRepository {
         if (!isIdUsersInDatabase(id)) {
             throw new NotFoundException("Пользователь с ID = " + id + " не найден!");
         }
-        User user = jdbcTemplate.queryForObject(QUERY_FOR_GET_USER_BY_ID, mapper, id);
+        User user = jdbcTemplate.queryForObject(queryForGetUserById, mapper, id);
         user.setFriends(getUserFriendsFromDB(user.getId()));
         return user;
     }
 
     private boolean isIdUsersInDatabase(Long id) {
-        List<Long> allId = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_USER_ID, Long.class);
+        List<Long> allId = jdbcTemplate.queryForList(queryForGetAllUserId, Long.class);
         return allId.contains(id);
     }
 }

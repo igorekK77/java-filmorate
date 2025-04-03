@@ -11,9 +11,9 @@ import java.util.List;
 @Repository
 public class RatingRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final String QUERY_FOR_GET_ALL_RATING = "SELECT name FROM rating";
-    private final String QUERY_FOR_GET_RATING_BY_RATING_ID = "SELECT name FROM rating WHERE rating_id = ?";
-    private final String QUERY_FOR_GET_ALL_RATING_ID = "SELECT rating_id FROM rating";
+    private final String queryForGetAllRating = "SELECT name FROM rating";
+    private final String queryForGetRatingByRatingId = "SELECT name FROM rating WHERE rating_id = ?";
+    private final String queryForGetAllRatingId = "SELECT rating_id FROM rating";
 
     @Autowired
     public RatingRepository(JdbcTemplate jdbcTemplate) {
@@ -21,18 +21,18 @@ public class RatingRepository {
     }
 
     public List<RatingName> allRating() {
-        List<String> allRating = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_RATING, String.class);
+        List<String> allRating = jdbcTemplate.queryForList(queryForGetAllRating, String.class);
         return allRating.stream()
                 .map(rating -> new RatingName(allRating.indexOf(rating) + 1, rating))
                 .toList();
     }
 
     public RatingName getRatingById(int rating_id) {
-        List<Integer> allRatingId = jdbcTemplate.queryForList(QUERY_FOR_GET_ALL_RATING_ID, Integer.class);
+        List<Integer> allRatingId = jdbcTemplate.queryForList(queryForGetAllRatingId, Integer.class);
         if (!allRatingId.contains(rating_id)) {
             throw new NotFoundException("Рейтинга с ID = " + rating_id + " не существует!");
         }
-        String rating = jdbcTemplate.queryForObject(QUERY_FOR_GET_RATING_BY_RATING_ID, String.class, rating_id);
+        String rating = jdbcTemplate.queryForObject(queryForGetRatingByRatingId, String.class, rating_id);
         return new RatingName(rating_id, rating);
     }
 
