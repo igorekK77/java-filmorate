@@ -22,7 +22,7 @@ import java.util.*;
 @Repository
 @Slf4j
 @Qualifier("dbUserStorage")
-public class UserDbStorage implements UserStorage{
+public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserRowMapper mapper;
     private final UserFriendsMapper userFriendsMapper;
@@ -37,7 +37,7 @@ public class UserDbStorage implements UserStorage{
     private final String queryForGetAllUserId = "SELECT user_id FROM users";
 
     @Autowired
-    public UserDbStorage (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.mapper = mapper;
         this.userFriendsMapper = userFriendsMapper;
