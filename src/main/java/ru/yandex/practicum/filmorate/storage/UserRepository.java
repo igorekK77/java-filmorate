@@ -29,7 +29,7 @@ public class UserRepository {
     private final String queryForGetAllUserId = "SELECT user_id FROM users";
 
     @Autowired
-    public UserRepository (JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
+    public UserRepository(JdbcTemplate jdbcTemplate, UserRowMapper mapper, UserFriendsMapper userFriendsMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.mapper = mapper;
         this.userFriendsMapper = userFriendsMapper;
