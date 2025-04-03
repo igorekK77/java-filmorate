@@ -27,13 +27,13 @@ public class RatingRepository {
                 .toList();
     }
 
-    public RatingName getRatingById(int rating_id) {
+    public RatingName getRatingById(int ratingId) {
         List<Integer> allRatingId = jdbcTemplate.queryForList(queryForGetAllRatingId, Integer.class);
-        if (!allRatingId.contains(rating_id)) {
-            throw new NotFoundException("Рейтинга с ID = " + rating_id + " не существует!");
+        if (!allRatingId.contains(ratingId)) {
+            throw new NotFoundException("Рейтинга с ID = " + ratingId + " не существует!");
         }
-        String rating = jdbcTemplate.queryForObject(queryForGetRatingByRatingId, String.class, rating_id);
-        return new RatingName(rating_id, rating);
+        String rating = jdbcTemplate.queryForObject(queryForGetRatingByRatingId, String.class, ratingId);
+        return new RatingName(ratingId, rating);
     }
 
 }
