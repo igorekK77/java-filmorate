@@ -20,7 +20,7 @@ public class RatingService {
         return ratingRepository.allRating();
     }
 
-    public RatingName getRatingById(int rating_id) {
-        return ratingRepository.getRatingById(rating_id);
+    public RatingName getRatingById(int ratingId) {
+        return ratingRepository.getRatingById(ratingId);
     }
 }
