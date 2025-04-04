@@ -2,107 +2,216 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dto.FilmLikes;
+import ru.yandex.practicum.filmorate.dto.GenreName;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mappers.FilmLikesMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.*;
 
 @Repository
 @Slf4j
-public class FilmRepository {
-    private final JdbcTemplate jdbcTemplate;
-    private final FilmRowMapper mapper;
-    private final UserDbStorage userDbStorage;
-    private final FilmLikesMapper filmLikesMapper;
+@Qualifier("dbFilmStorage")
+public class FilmRepository implements FilmStorage {
+    private FilmRowMapper mapper;
+    private JdbcTemplate jdbcTemplate;
+    private final String queryForCreateFilms = "INSERT INTO film (name, description, release_date, duration, " +
+            "rating_id) VALUES (?, ?, ?, ?, ?);";
     private final String queryForGetFilmById = "SELECT * FROM film WHERE film_id = ?;";
-    private final String queryForAddNewLike = "INSERT INTO likes (film_id, user_id) " +
-            "VALUES (?, ?);";
-    private final String queryForGetFilmLikes = "SELECT user_id FROM likes WHERE film_id = ?;";
-    private final String queryForDeleteLikes = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
-    private final String queryForGetCountLikes = "SELECT film_id, COUNT(user_id) AS count_likes " +
-            "FROM likes GROUP BY film_id;";
+    private final String queryForUpdateFilm = "UPDATE film SET name = ?, description = ?, release_date = ?, " +
+            "duration = ?, rating_id = ? WHERE film_id = ?;";
+    private final String queryForAddGenre = "INSERT INTO film_genre (film_id, genre_id) " +
+            "VALUES (?, ?)";
+    private final String queryForDeleteGenre = "DELETE FROM film_genre WHERE film_id = ?";
+    private final String queryForGetFilmGenre = "SELECT genre_id FROM film_genre WHERE film_id = ?;";
+    private final String queryForGetAllGenre = "SELECT genre_id FROM genre";
+    private final String queryForGetAllFilm = "SELECT * FROM film;";
+    private final String queryForGetAllRatingId = "SELECT rating_id FROM rating";
+    private final String queryForGetNameGenreByGenreId = "SELECT name FROM genre WHERE genre_id = ?";
 
     @Autowired
-    public FilmRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserDbStorage userDbStorage,
-                          FilmLikesMapper filmLikesMapper) {
-        this.jdbcTemplate = jdbcTemplate;
+    public FilmRepository(FilmRowMapper mapper, JdbcTemplate jdbcTemplate) {
         this.mapper = mapper;
-        this.userDbStorage = userDbStorage;
-        this.filmLikesMapper = filmLikesMapper;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Film putLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
-        User user = userDbStorage.getUserById(userId);
-        Set<Long> likes = getFilmLikes(filmId);
-        if (likes.contains(userId)) {
-            throw new ValidationException("Пользователь с ID = " + userId + " уже поставил лайк фильму с ID = " +
-                    filmId);
+    @Override
+    public Film create(Film film) {
+        if (film.getName() == null || film.getName().isBlank()) {
+            log.error("Фильм с ID = {}. Название фильма не может быть пустым", film.getId());
+            throw new ValidationException("Название фильма не может быть пустым");
         }
-        int rowCount = jdbcTemplate.update(queryForAddNewLike, filmId, userId);
-        if (rowCount == 0) {
-            throw new ValidationException("Не удалось добавить лайк!");
+        if (film.getDescription() == null || film.getDescription().length() > 200) {
+            log.error("Фильм с ID = {}. Максимальная длина описания — 200 символов", film.getId());
+            throw new ValidationException("Максимальная длина описания — 200 символов");
         }
-        if (film.getLikes() == null) {
-            film.setLikes(new HashSet<>());
-            film.getLikes().add(userId);
+        if (film.getReleaseDate() == null ||
+                !film.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
+            log.error("Фильм с ID = {}. Дата релиза — не раньше 28 декабря 1895 года", film.getId());
+            throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+        }
+        if (film.getDuration() == null || film.getDuration() < 0) {
+            log.error("Фильм с ID = {}. Продолжительность фильма должна быть положительным числом.", film.getId());
+            throw new ValidationException("Продолжительность фильма должна быть положительным числом.");
+        }
+
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(queryForCreateFilms, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, film.getName());
+            ps.setString(2, film.getDescription());
+            ps.setTimestamp(3, Timestamp.valueOf(film.getReleaseDate().atStartOfDay()));
+            ps.setInt(4, film.getDuration());
+            if (film.getMpa() != null) {
+                List<Integer> allRating = jdbcTemplate.queryForList(queryForGetAllRatingId, Integer.class);
+                if (!allRating.contains(film.getMpa().getId())) {
+                    throw new NotFoundException("Рейтинга с ID = " +  film.getMpa().getId() + " не существует!");
+                }
+                ps.setInt(5, film.getMpa().getId());
+            }
+            return ps;
+        }, keyHolder);
+
+        Long id = keyHolder.getKeyAs(Long.class);
+
+        film.setId(id);
+
+        if (film.getGenres() != null) {
+            List<Integer> allGenre = jdbcTemplate.queryForList(queryForGetAllGenre, Integer.class);
+            List<GenreName> genreFromFilm = film.getGenres();
+            List<Integer> addGenreIdCheck = new ArrayList<>();
+            genreFromFilm.forEach(genre -> {
+                if (!allGenre.contains(genre.getId())) {
+                    throw new NotFoundException("Жанра с ID = " +  genre.getId() + " не существует!");
+                }
+                if (!addGenreIdCheck.contains(genre.getId())) {
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(queryForAddGenre);
+                        ps.setLong(1, film.getId());
+                        ps.setInt(2, genre.getId());
+                        return ps;
+                    });
+                }
+                addGenreIdCheck.add(genre.getId());
+            });
         } else {
-            film.getLikes().add(userId);
+            film.setGenres(new ArrayList<>());
         }
+        log.info("Создан фильм: {}", film);
         return film;
     }
 
-    public Film deleteLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
-        User user = userDbStorage.getUserById(userId);
-        Set<Long> likes = getFilmLikes(filmId);
-        if (!likes.contains(userId)) {
-            log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
-            throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
+    @Override
+    public Film update(Film newFilm) {
+        if (newFilm.getId() == null) {
+            log.error("Id должен быть указан");
+            throw new ValidationException("Id должен быть указан");
         }
-        film.setLikes(likes);
-        int rowCount = jdbcTemplate.update(queryForDeleteLikes, filmId, userId);
-        if (rowCount == 0) {
-            throw new ValidationException("Не удалось добавить лайк!");
+        Film film = getFilmById(newFilm.getId());
+
+        if (newFilm.getName() != null && !newFilm.getName().equals(film.getName())) {
+            film.setName(newFilm.getName());
         }
-        film.getLikes().remove(userId);
+        if (newFilm.getDescription() != null && !newFilm.getDescription().equals(film.getDescription())) {
+            if (newFilm.getDescription().length() > 200) {
+                log.error("Максимальная длина описания — 200 символов");
+                throw new ValidationException("Максимальная длина описания — 200 символов");
+            }
+            film.setDescription(newFilm.getDescription());
+            log.debug("Новое описание фильма с id {}: {}", film.getId(), film.getDescription());
+        }
+        if (newFilm.getDuration() != null && !newFilm.getDuration().equals(film.getDuration())) {
+            film.setDuration(newFilm.getDuration());
+        }
+        if (newFilm.getReleaseDate() != null && !newFilm.getReleaseDate().equals(film.getReleaseDate())) {
+            if (!newFilm.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
+                log.error("Дата релиза — не раньше 28 декабря 1895 года");
+                throw new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
+            }
+            film.setReleaseDate(newFilm.getReleaseDate());
+        }
+
+        if (newFilm.getMpa() != null && newFilm.getMpa().getId() != (film.getMpa().getId())) {
+            film.setMpa(newFilm.getMpa());
+        }
+        Integer ratingId;
+        if (film.getMpa() != null) {
+            ratingId = film.getMpa().getId();
+        } else {
+            ratingId = 5;
+        }
+        if (newFilm.getMpa() != null) {
+            ratingId = newFilm.getMpa().getId();
+        }
+
+        int countRow = jdbcTemplate.update(queryForUpdateFilm, film.getName(), film.getDescription(),
+                film.getReleaseDate(), film.getDuration(), ratingId, film.getId());
+
+        if (countRow == 0) {
+            throw new ValidationException("Не удалось обновить данные");
+        }
+
+        if (film.getGenres() != null && newFilm.getGenres() != null) {
+            List<Integer> genre = getFilmGenre(film.getId());
+            genre.forEach(genre_id -> {
+                jdbcTemplate.update(queryForDeleteGenre, genre_id);
+            });
+            newFilm.getGenres().forEach(genre_id -> {
+                jdbcTemplate.update(queryForAddGenre, film.getId(), genre_id);
+            });
+            film.setGenres(newFilm.getGenres());
+        }
+        log.info("Обновлен фильм: {}", film);
         return film;
     }
 
-    public List<Film> getTopFilmsByLikes(int count) {
-        List<FilmLikes> filmLikes = jdbcTemplate.query(queryForGetCountLikes, filmLikesMapper);
-        if (count > filmLikes.size()) {
-            count = filmLikes.size();
-        }
-        filmLikes = filmLikes.stream()
-                .sorted(new FilmLikesComparator().reversed())
-                .limit(count)
-                .toList();
-        return filmLikes.stream()
-                .map(filmLikes1 -> getFilmById(filmLikes1.getFilmId()))
+    @Override
+    public Collection<Film> allFilms() {
+        List<Film> allFilm = jdbcTemplate.query(queryForGetAllFilm, mapper);
+        allFilm.forEach(film -> film.setGenres(getGenreByFilm(film.getId())));
+        return allFilm;
+    }
+
+    private List<GenreName> getGenreByFilm(Long film_id) {
+        List<Integer> allGenre = getFilmGenre(film_id);
+        return allGenre.stream()
+                .map(genre_id -> {
+                    GenreName genre = new GenreName();
+                    genre.setId(genre_id);
+                    String genreName = jdbcTemplate.queryForObject(queryForGetNameGenreByGenreId, String.class,
+                            genre_id);
+                    genre.setName(genreName);
+                    return genre;
+                })
                 .toList();
     }
 
-    private Film getFilmById(Long id) {
+    @Override
+    public Film getFilmById(Long id) {
         Film film = jdbcTemplate.queryForObject(queryForGetFilmById, mapper, id);
         if (film == null) {
             log.error("Фильма с Id = {} не существует", id);
             throw new NotFoundException("Фильма с ID = " + id + " не существует!");
         }
+        if (getGenreByFilm(film.getId()).isEmpty()) {
+            film.setGenres(new ArrayList<>());
+        } else {
+            film.setGenres(getGenreByFilm(film.getId()));
+        }
         return film;
     }
 
-    private Set<Long> getFilmLikes(Long film_id) {
-        List<Long> getAllGenre = jdbcTemplate.queryForList(queryForGetFilmLikes, Long.class, film_id);
-        return new HashSet<>(getAllGenre);
+    private List<Integer> getFilmGenre(Long film_id) {
+        return jdbcTemplate.queryForList(queryForGetFilmGenre, Integer.class, film_id);
     }
+
 }

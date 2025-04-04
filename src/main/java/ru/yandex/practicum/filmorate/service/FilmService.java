@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmRepository;
+import ru.yandex.practicum.filmorate.storage.LikesRepository;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
@@ -11,11 +11,11 @@ import java.util.*;
 @Service
 public class FilmService {
     private final FilmStorage filmStorage;
-    private final FilmRepository filmRepository;
+    private final LikesRepository likesRepository;
 
-    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, FilmRepository filmRepository) {
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, LikesRepository likesRepository) {
         this.filmStorage = filmStorage;
-        this.filmRepository = filmRepository;
+        this.likesRepository = likesRepository;
     }
 
     public Film create(Film film) {
@@ -35,15 +35,15 @@ public class FilmService {
     }
 
     public Film putLike(Long filmId, Long userId) {
-        return filmRepository.putLike(filmId, userId);
+        return likesRepository.putLike(filmId, userId);
     }
 
     public Film deleteLike(Long filmId, Long userId) {
-        return filmRepository.deleteLike(filmId, userId);
+        return likesRepository.deleteLike(filmId, userId);
     }
 
     public List<Film> getTopFilmsByLikes(int count) {
-        return filmRepository.getTopFilmsByLikes(count);
+        return likesRepository.getTopFilmsByLikes(count);
     }
 
 }

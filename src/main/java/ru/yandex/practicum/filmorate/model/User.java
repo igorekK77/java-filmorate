@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.UserFriends;
 
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class User {
     private Long id;
 
@@ -31,9 +33,5 @@ public class User {
         this.name = name;
         this.birthday = birthday;
         friends = new ArrayList<>();
-    }
-
-    public User() {
-
     }
 }

@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserRepository;
+import ru.yandex.practicum.filmorate.storage.FriendsRepository;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
@@ -15,12 +15,12 @@ import java.util.*;
 public class UserService {
 
     private final UserStorage userStorage;
-    private final UserRepository userRepository;
+    private final FriendsRepository friendsRepository;
 
     @Autowired
-    public UserService(@Qualifier("dbUserStorage") UserStorage userStorage, UserRepository userRepository) {
+    public UserService(@Qualifier("dbUserStorage") UserStorage userStorage, FriendsRepository friendsRepository) {
         this.userStorage = userStorage;
-        this.userRepository = userRepository;
+        this.friendsRepository = friendsRepository;
     }
 
     public User create(User user) {
@@ -40,19 +40,19 @@ public class UserService {
     }
 
     public User addFriend(Long addingUserId, Long userWhoAddedId) {
-        return userRepository.addFriend(addingUserId, userWhoAddedId);
+        return friendsRepository.addFriend(addingUserId, userWhoAddedId);
     }
 
     public User deleteFriend(Long idWhoDeleted, Long idWhomDeleted) {
-        return userRepository.deleteFriend(idWhoDeleted, idWhomDeleted);
+        return friendsRepository.deleteFriend(idWhoDeleted, idWhomDeleted);
     }
 
     public List<User> printUserFriends(Long id) {
-        return userRepository.printListUserFriends(id);
+        return friendsRepository.printListUserFriends(id);
     }
 
     public List<User> printListCommonFriends(Long idFirstUser, Long idSecondUser) {
-        return userRepository.printListCommonFriends(idFirstUser, idSecondUser);
+        return friendsRepository.printListCommonFriends(idFirstUser, idSecondUser);
     }
 
 }
