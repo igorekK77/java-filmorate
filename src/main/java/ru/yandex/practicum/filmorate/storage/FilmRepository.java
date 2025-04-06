@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -87,22 +89,26 @@ public class FilmRepository implements FilmStorage {
 
         if (film.getGenres() != null) {
             List<Integer> allGenre = jdbcTemplate.queryForList(queryForGetAllGenre, Integer.class);
-            List<GenreName> genreFromFilm = film.getGenres();
-            List<Integer> addGenreIdCheck = new ArrayList<>();
-            genreFromFilm.forEach(genre -> {
-                if (!allGenre.contains(genre.getId())) {
-                    throw new NotFoundException("Жанра с ID = " +  genre.getId() + " не существует!");
+            Set<GenreName> allGenreFromFilm = new HashSet<>(film.getGenres());
+            List<GenreName> genreFromFilm = new ArrayList<>(allGenreFromFilm);
+
+
+            jdbcTemplate.batchUpdate(queryForAddGenre, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    if (!allGenre.contains(genreFromFilm.get(i).getId())) {
+                        throw new NotFoundException("Жанра с ID = " + genreFromFilm.get(i).getId() + " не существует!");
+                    }
+                    ps.setLong(1, film.getId());
+                    ps.setInt(2, genreFromFilm.get(i).getId());
                 }
-                if (!addGenreIdCheck.contains(genre.getId())) {
-                    jdbcTemplate.update(connection -> {
-                        PreparedStatement ps = connection.prepareStatement(queryForAddGenre);
-                        ps.setLong(1, film.getId());
-                        ps.setInt(2, genre.getId());
-                        return ps;
-                    });
+
+                @Override
+                public int getBatchSize() {
+                    return genreFromFilm.size();
                 }
-                addGenreIdCheck.add(genre.getId());
             });
+
         } else {
             film.setGenres(new ArrayList<>());
         }
@@ -162,11 +168,28 @@ public class FilmRepository implements FilmStorage {
 
         if (film.getGenres() != null && newFilm.getGenres() != null) {
             List<Integer> genre = getFilmGenre(film.getId());
-            genre.forEach(genre_id -> {
-                jdbcTemplate.update(queryForDeleteGenre, genre_id);
+            jdbcTemplate.batchUpdate(queryForDeleteGenre, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setLong(1, film.getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return genre.size();
+                }
             });
-            newFilm.getGenres().forEach(genre_id -> {
-                jdbcTemplate.update(queryForAddGenre, film.getId(), genre_id);
+            jdbcTemplate.batchUpdate(queryForAddGenre, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    ps.setLong(1, film.getId());
+                    ps.setInt(2, newFilm.getGenres().get(i).getId());
+                }
+
+                @Override
+                public int getBatchSize() {
+                    return newFilm.getGenres().size();
+                }
             });
             film.setGenres(newFilm.getGenres());
         }
@@ -176,9 +199,7 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public Collection<Film> allFilms() {
-        List<Film> allFilm = jdbcTemplate.query(queryForGetAllFilm, mapper);
-        allFilm.forEach(film -> film.setGenres(getGenreByFilm(film.getId())));
-        return allFilm;
+        return jdbcTemplate.query(queryForGetAllFilm, mapper);
     }
 
     private List<GenreName> getGenreByFilm(Long film_id) {

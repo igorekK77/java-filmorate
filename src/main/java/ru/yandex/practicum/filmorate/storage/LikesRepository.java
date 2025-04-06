@@ -28,8 +28,10 @@ public class LikesRepository {
             "VALUES (?, ?);";
     private final String queryForGetFilmLikes = "SELECT user_id FROM likes WHERE film_id = ?;";
     private final String queryForDeleteLikes = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
-    private final String queryForGetCountLikes = "SELECT film_id, COUNT(user_id) AS count_likes " +
-            "FROM likes GROUP BY film_id;";
+    private final String queryForGetCountLikes = "SELECT f.*, COUNT(l.user_id) AS count_likes \n" +
+            "FROM likes AS l \n" +
+            "JOIN film AS f ON f.film_id = l.film_id\n" +
+            "GROUP BY l.film_id;";
 
     @Autowired
     public LikesRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserRepository userRepository,
@@ -79,17 +81,15 @@ public class LikesRepository {
     }
 
     public List<Film> getTopFilmsByLikes(int count) {
-        List<FilmLikes> filmLikes = jdbcTemplate.query(queryForGetCountLikes, filmLikesMapper);
-        if (count > filmLikes.size()) {
-            count = filmLikes.size();
+        List<Film> films = jdbcTemplate.query("SELECT * FROM film;", mapper);
+        if (count > films.size()) {
+            count = films.size();
         }
-        filmLikes = filmLikes.stream()
+        films = films.stream()
                 .sorted(new FilmLikesComparator().reversed())
                 .limit(count)
                 .toList();
-        return filmLikes.stream()
-                .map(filmLikes1 -> getFilmById(filmLikes1.getFilmId()))
-                .toList();
+        return films;
     }
 
     private Film getFilmById(Long id) {
