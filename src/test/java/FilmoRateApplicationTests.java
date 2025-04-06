@@ -150,7 +150,7 @@ public class FilmoRateApplicationTests {
         friendsRepository.addFriend(user1.getId(), user3.getId());
         friendsRepository.addFriend(user2.getId(), user3.getId());
 
-        Assertions.assertEquals(friends ,friendsRepository.printListCommonFriends(user1.getId(), user2.getId()));
+        Assertions.assertEquals(friends, friendsRepository.printListCommonFriends(user1.getId(), user2.getId()));
     }
 
     @Test
