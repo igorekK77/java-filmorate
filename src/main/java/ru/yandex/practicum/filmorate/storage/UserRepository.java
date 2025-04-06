@@ -137,7 +137,7 @@ public class UserRepository implements UserStorage {
         return user;
     }
 
-    public List<UserFriends> getUserFriendsFromDB(Long id) {
+    private List<UserFriends> getUserFriendsFromDB(Long id) {
         return jdbcTemplate.query(queryForGetFriendAndStatus, userFriendsMapper, id);
     }
 

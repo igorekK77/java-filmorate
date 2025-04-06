@@ -37,15 +37,13 @@ public class Film {
 
     private RatingName mpa;
 
-    public Film(String name, String description, LocalDate releaseDate, int duration, List<GenreName> genres,
-                RatingName mpa) {
+    public Film(String name, String description, LocalDate releaseDate, int duration, RatingName mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        likes = new HashSet<>();
         this.mpa = mpa;
-        this.genres = genres;
+        likes = new HashSet<>();
     }
 
 }

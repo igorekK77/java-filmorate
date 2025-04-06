@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,6 +14,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final LikesRepository likesRepository;
 
+    @Autowired
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, LikesRepository likesRepository) {
         this.filmStorage = filmStorage;
         this.likesRepository = likesRepository;

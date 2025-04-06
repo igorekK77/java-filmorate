@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.mappers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ public class FilmRowMapper implements RowMapper<Film> {
     private final GenreNameMapper genreNameMapper;
     private final String queryForGetNameRatingByRatingId = "SELECT name FROM rating WHERE rating_id = ?";
 
+    @Autowired
     public FilmRowMapper(JdbcTemplate jdbcTemplate, GenreNameMapper genreNameMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.genreNameMapper = genreNameMapper;

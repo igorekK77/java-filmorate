@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 public class RatingName {
     private int id;
     private String name;
+
+    public RatingName(int id) {
+        this.id = id;
+    }
 }

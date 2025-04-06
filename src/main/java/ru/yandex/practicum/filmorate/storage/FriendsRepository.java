@@ -22,7 +22,6 @@ public class FriendsRepository {
     private final UserFriendsMapper userFriendsMapper;
     private final String queryAddingUserFriends = "INSERT INTO user_friends (user_id, friend_id, status) " +
             "VALUES (?, ?, " + "'" + Status.UNCONFIRMED + "'" + ");";
-    private final String queryDeleteUserFriends = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?;";
     private final String queryForGetUserById = "SELECT * FROM users WHERE user_id = ?;";
     private final String queryForGetFriendAndStatus = "SELECT friend_id, status FROM user_friends WHERE " +
             "user_id = ?;";
@@ -86,13 +85,15 @@ public class FriendsRepository {
         User userWhomDeleted = getUserById(idWhomDeleted);
 
         List<UserFriends> friendsUserWhoAdded = getUserFriendsFromDB(idWhoDeleted);
-        List<UserFriends> friendsUserWhomAdded = getUserFriendsFromDB(idWhomDeleted);
 
         boolean isUserHasFriends = false;
 
         for (UserFriends userFriends: friendsUserWhoAdded) {
             if (userFriends.getId().equals(idWhomDeleted)) {
                 isUserHasFriends = true;
+                friendsUserWhoAdded.remove(userFriends);
+                jdbcTemplate.update("DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?",
+                        idWhoDeleted, idWhomDeleted);
                 break;
             }
         }
@@ -102,9 +103,6 @@ public class FriendsRepository {
                     idWhoDeleted, idWhomDeleted);
 
         }
-
-        int rowCountWhoDelete =  jdbcTemplate.update(queryDeleteUserFriends, idWhoDeleted, idWhomDeleted);
-
 
         userWhoDeleted.setFriends(getUserFriendsFromDB(idWhoDeleted));
 
