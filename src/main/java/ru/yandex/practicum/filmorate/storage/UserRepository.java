@@ -124,9 +124,7 @@ public class UserRepository implements UserStorage {
 
     @Override
     public Collection<User> allUser() {
-        List<User> users = jdbcTemplate.query(queryGetAllUser, mapper);
-        users.forEach(user -> user.setFriends(getUserFriendsFromDB(user.getId())));
-        return users;
+        return jdbcTemplate.query(queryGetAllUser, mapper);
     }
 
     @Override

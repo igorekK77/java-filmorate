@@ -42,21 +42,19 @@ public class FriendsRepository {
 
     public List<User> printListUserFriends(Long id) {
         getUserById(id);
-        List<UserFriends> userFriends = jdbcTemplate.query(queryForGetFriendAndStatus, userFriendsMapper, id);
-        return userFriends.stream()
-                .map(userFriend -> getUserById(userFriend.getId()))
-                .toList();
+        return jdbcTemplate.query("SELECT u.*\n" +
+                "FROM USERS u \n" +
+                "WHERE u.USER_ID IN (SELECT FRIEND_ID FROM USER_FRIENDS uf WHERE USER_ID = ?);", mapper, id);
     }
 
     public List<User> printListCommonFriends(Long idFirstUser, Long idSecondUser) {
         getUserById(idFirstUser);
         getUserById(idSecondUser);
-        List<UserFriends> listFriendsFirstUser = getUserFriendsFromDB(idFirstUser);
-        List<UserFriends> listFriendsSecondUser = getUserFriendsFromDB(idSecondUser);
-        listFriendsFirstUser.retainAll(listFriendsSecondUser);
-        return listFriendsFirstUser.stream()
-                .map(userFriend -> getUserById(userFriend.getId()))
-                .toList();
+        List<User> firstUserFriends = printListUserFriends(idFirstUser);
+        List<User> secondUserFriends = printListUserFriends(idSecondUser);
+        firstUserFriends.retainAll(secondUserFriends);
+        return firstUserFriends;
+
     }
 
     public User addFriend(Long userWhoAddedId, Long userWhomAddedId) {

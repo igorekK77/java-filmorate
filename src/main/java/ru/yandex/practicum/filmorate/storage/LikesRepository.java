@@ -4,12 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dto.FilmLikes;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mappers.FilmLikesMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.util.HashSet;
@@ -22,24 +20,17 @@ public class LikesRepository {
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper mapper;
     private final UserRepository userRepository;
-    private final FilmLikesMapper filmLikesMapper;
     private final String queryForGetFilmById = "SELECT * FROM film WHERE film_id = ?;";
     private final String queryForAddNewLike = "INSERT INTO likes (film_id, user_id) " +
             "VALUES (?, ?);";
     private final String queryForGetFilmLikes = "SELECT user_id FROM likes WHERE film_id = ?;";
     private final String queryForDeleteLikes = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
-    private final String queryForGetCountLikes = "SELECT f.*, COUNT(l.user_id) AS count_likes \n" +
-            "FROM likes AS l \n" +
-            "JOIN film AS f ON f.film_id = l.film_id\n" +
-            "GROUP BY l.film_id;";
 
     @Autowired
-    public LikesRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserRepository userRepository,
-                           FilmLikesMapper filmLikesMapper) {
+    public LikesRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserRepository userRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.mapper = mapper;
         this.userRepository = userRepository;
-        this.filmLikesMapper = filmLikesMapper;
     }
 
     public Film putLike(Long filmId, Long userId) {
