@@ -59,23 +59,13 @@ public class FriendsRepository {
     public User addFriend(Long userWhoAddedId, Long userWhomAddedId) {
         User userWhoAdded = getUserById(userWhoAddedId);
         User userWhomAdded = getUserById(userWhomAddedId);
-
-        List<UserFriends> friendsUserWhoAdded = getUserFriendsFromDB(userWhoAddedId);
-
-        for (UserFriends userFriends: friendsUserWhoAdded) {
-            if (userFriends.getId().equals(userWhomAddedId)) {
-                log.error("Пользователь с Id = {} уже добавил в друзья пользователя с Id = {}",
-                        userWhomAddedId, userWhoAddedId);
-                throw new ValidationException("Пользователь с Id = " + userWhomAddedId + " уже добавил в друзья пользователя" +
-                        "с Id = " + userWhoAddedId);
-            }
-        }
-
         int rowCountWhoAdding = jdbcTemplate.update(queryAddingUserFriends, userWhoAddedId, userWhomAddedId);
         if (rowCountWhoAdding == 0) {
-            throw new ValidationException("Не удалось добавить пользователя в список друзей!");
+            log.error("Пользователь с Id = {} уже добавил в друзья пользователя с Id = {}",
+                    userWhomAddedId, userWhoAddedId);
+            throw new ValidationException("Пользователь с Id = " + userWhomAddedId + " уже добавил в друзья пользователя" +
+                    "с Id = " + userWhoAddedId);
         }
-
         userWhoAdded.setFriends(getUserFriendsFromDB(userWhoAddedId));
         return userWhoAdded;
     }
@@ -83,29 +73,13 @@ public class FriendsRepository {
     public User deleteFriend(Long idWhoDeleted, Long idWhomDeleted) {
         User userWhoDeleted = getUserById(idWhoDeleted);
         User userWhomDeleted = getUserById(idWhomDeleted);
-
-        List<UserFriends> friendsUserWhoAdded = getUserFriendsFromDB(idWhoDeleted);
-
-        boolean isUserHasFriends = false;
-
-        for (UserFriends userFriends: friendsUserWhoAdded) {
-            if (userFriends.getId().equals(idWhomDeleted)) {
-                isUserHasFriends = true;
-                friendsUserWhoAdded.remove(userFriends);
-                jdbcTemplate.update("DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?",
-                        idWhoDeleted, idWhomDeleted);
-                break;
-            }
-        }
-
-        if (!isUserHasFriends) {
+        int rowCount = jdbcTemplate.update("DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?",
+                idWhoDeleted, idWhomDeleted);
+        if (rowCount == 0) {
             log.error("Пользователь с ID = {} не добавлял в друзья пользователя с Id = {}",
                     idWhoDeleted, idWhomDeleted);
-
         }
-
         userWhoDeleted.setFriends(getUserFriendsFromDB(idWhoDeleted));
-
         return userWhoDeleted;
     }
 

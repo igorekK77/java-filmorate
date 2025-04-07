@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.GenreNameMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -26,9 +27,13 @@ import java.util.*;
 public class FilmRepository implements FilmStorage {
     private FilmRowMapper mapper;
     private JdbcTemplate jdbcTemplate;
+    private GenreNameMapper genreNameMapper;
     private final String queryForCreateFilms = "INSERT INTO film (name, description, release_date, duration, " +
             "rating_id) VALUES (?, ?, ?, ?, ?);";
-    private final String queryForGetFilmById = "SELECT * FROM film WHERE film_id = ?;";
+    private final String queryForGetFilmById = "SELECT f.*, r.name AS rating_name " +
+            "FROM film AS f JOIN rating AS r " +
+            "ON f.rating_id = r.rating_id " +
+            "WHERE film_id = ?;";
     private final String queryForUpdateFilm = "UPDATE film SET name = ?, description = ?, release_date = ?, " +
             "duration = ?, rating_id = ? WHERE film_id = ?;";
     private final String queryForAddGenre = "INSERT INTO film_genre (film_id, genre_id) " +
@@ -36,14 +41,16 @@ public class FilmRepository implements FilmStorage {
     private final String queryForDeleteGenre = "DELETE FROM film_genre WHERE film_id = ?";
     private final String queryForGetFilmGenre = "SELECT genre_id FROM film_genre WHERE film_id = ?;";
     private final String queryForGetAllGenre = "SELECT genre_id FROM genre";
-    private final String queryForGetAllFilm = "SELECT * FROM film;";
+    private final String queryForGetAllFilm = "SELECT f.*, r.name AS rating_name " +
+            "FROM film AS f JOIN rating AS r " +
+            "ON f.rating_id = r.rating_id;";
     private final String queryForGetAllRatingId = "SELECT rating_id FROM rating";
-    private final String queryForGetNameGenreByGenreId = "SELECT name FROM genre WHERE genre_id = ?";
 
     @Autowired
-    public FilmRepository(FilmRowMapper mapper, JdbcTemplate jdbcTemplate) {
+    public FilmRepository(FilmRowMapper mapper, JdbcTemplate jdbcTemplate, GenreNameMapper genreNameMapper) {
         this.mapper = mapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.genreNameMapper = genreNameMapper;
     }
 
     @Override
@@ -202,18 +209,11 @@ public class FilmRepository implements FilmStorage {
         return jdbcTemplate.query(queryForGetAllFilm, mapper);
     }
 
-    private List<GenreName> getGenreByFilm(Long film_id) {
-        List<Integer> allGenre = getFilmGenre(film_id);
-        return allGenre.stream()
-                .map(genre_id -> {
-                    GenreName genre = new GenreName();
-                    genre.setId(genre_id);
-                    String genreName = jdbcTemplate.queryForObject(queryForGetNameGenreByGenreId, String.class,
-                            genre_id);
-                    genre.setName(genreName);
-                    return genre;
-                })
-                .toList();
+    private List<GenreName> getGenreByFilm(Long filmId) {
+        String query = "SELECT g.genre_id, g.name FROM genre AS g JOIN " +
+                "film_genre AS fg ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id = ?";
+        return jdbcTemplate.query(query, genreNameMapper, filmId);
     }
 
     @Override
@@ -223,16 +223,17 @@ public class FilmRepository implements FilmStorage {
             log.error("Фильма с Id = {} не существует", id);
             throw new NotFoundException("Фильма с ID = " + id + " не существует!");
         }
-        if (getGenreByFilm(film.getId()).isEmpty()) {
+        List<GenreName> allGenre = getGenreByFilm(film.getId());
+        if (allGenre.isEmpty()) {
             film.setGenres(new ArrayList<>());
         } else {
-            film.setGenres(getGenreByFilm(film.getId()));
+            film.setGenres(allGenre);
         }
         return film;
     }
 
-    private List<Integer> getFilmGenre(Long film_id) {
-        return jdbcTemplate.queryForList(queryForGetFilmGenre, Integer.class, film_id);
+    private List<Integer> getFilmGenre(Long filmId) {
+        return jdbcTemplate.queryForList(queryForGetFilmGenre, Integer.class, filmId);
     }
 
 }

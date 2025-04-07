@@ -34,12 +34,6 @@ public class UserRowMapper implements RowMapper<User> {
         Timestamp timestamp = resultSet.getTimestamp("birthday");
         user.setBirthday(timestamp.toLocalDateTime().toLocalDate());
 
-        List<UserFriends> allFriends = jdbcTemplate.query("SELECT uf.friend_id, uf.status\n" +
-                "FROM user_friends uf JOIN users u\n" +
-                "ON uf.user_id = u.user_id\n" +
-                "WHERE u.user_id = ?;", userFriendsMapper, user.getId());
-        user.setFriends(allFriends);
-
         return user;
     }
 }
