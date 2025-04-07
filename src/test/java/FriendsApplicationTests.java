@@ -52,7 +52,7 @@ public class FriendsApplicationTests {
         User user2 = new User("updateEmail@yandex.ru", "updateLogin", "updateName",
                 LocalDate.of(2000, 2, 20));
         userStorage.create(user2);
-
+        user1.setFriends(new ArrayList<>());
         friendsRepository.addFriend(user1.getId(), user2.getId());
 
         Assertions.assertEquals(user1, friendsRepository.deleteFriend(user1.getId(), user2.getId()));

@@ -43,7 +43,6 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.mpa = mpa;
-        likes = new HashSet<>();
     }
 
 }

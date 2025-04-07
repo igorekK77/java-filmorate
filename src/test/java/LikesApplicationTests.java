@@ -47,7 +47,6 @@ public class LikesApplicationTests {
         likes.add(user1.getId());
         Film checkFilm = likesRepository.putLike(film1.getId(), user1.getId());
         film1.setLikes(likes);
-        film1.setGenres(null);
 
         Assertions.assertEquals(film1, checkFilm);
     }
@@ -61,9 +60,9 @@ public class LikesApplicationTests {
         User user1 = new User("testuser@mail.ru", "testlogin1", "test",
                 LocalDate.of(2001, 10,14));
         userStorage.create(user1);
+        film1.setLikes(new HashSet<>());
 
         likesRepository.putLike(film1.getId(), user1.getId());
-        film1.setGenres(null);
 
         Assertions.assertEquals(film1, likesRepository.deleteLike(film1.getId(), user1.getId()));
     }
@@ -76,8 +75,6 @@ public class LikesApplicationTests {
         Film film2 = new Film("testUpdate", "testDescriptionUpdate",
                 LocalDate.of(2015,11,11), 156, new RatingName(2, "PG"));
         filmRepository.create(film2);
-        film1.setGenres(null);
-        film2.setGenres(null);
         User user1 = new User("testuser@mail.ru", "testlogin1", "test",
                 LocalDate.of(2001, 10,14));
         userStorage.create(user1);
@@ -93,11 +90,6 @@ public class LikesApplicationTests {
         likesRepository.putLike(film2.getId(), user1.getId());
         likesRepository.putLike(film2.getId(), user2.getId());
         likesRepository.putLike(film2.getId(), user3.getId());
-
-        Set<Long> likesFirstFilm = Set.of(user1.getId(), user3.getId());
-        Set<Long> likesSecondFilm = Set.of(user1.getId(), user2.getId(), user3.getId());
-        film1.setLikes(likesFirstFilm);
-        film2.setLikes(likesSecondFilm);
 
         List<Film> topLikesFilm = new ArrayList<>();
         topLikesFilm.add(film2);

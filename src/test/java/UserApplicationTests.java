@@ -45,7 +45,6 @@ public class UserApplicationTests {
         User userUpdate = new User("updateEmail@yandex.ru", "updateLogin", "updateName",
                 LocalDate.of(2000, 2, 20));
         userUpdate.setId(user.getId());
-        userUpdate.setFriends(null);
         Assertions.assertEquals(userUpdate, userStorage.update(userUpdate));
     }
 
@@ -56,8 +55,6 @@ public class UserApplicationTests {
         userStorage.create(user1);
         User user2 = new User("updateEmail@yandex.ru", "updateLogin", "updateName",
                 LocalDate.of(2000, 2, 20));
-        user1.setFriends(null);
-        user2.setFriends(null);
         userStorage.create(user2);
         List<User> allUser = new ArrayList<>();
         allUser.add(user1);

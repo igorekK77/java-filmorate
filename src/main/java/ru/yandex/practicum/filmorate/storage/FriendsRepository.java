@@ -88,7 +88,10 @@ public class FriendsRepository {
             throw new NotFoundException("Пользователь с ID = " + id + " не найден!");
         }
         User user = jdbcTemplate.queryForObject(queryForGetUserById, mapper, id);
-        user.setFriends(getUserFriendsFromDB(user.getId()));
+        List<UserFriends> allFriends = getUserFriendsFromDB(user.getId());
+        if (!allFriends.isEmpty()) {
+            user.setFriends(getUserFriendsFromDB(user.getId()));
+        }
         return user;
     }
 

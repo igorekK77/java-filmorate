@@ -42,7 +42,6 @@ public class FilmApplicationTests {
         Film updateFilm = new Film("testUpdate", "testDescriptionUpdate",
                 LocalDate.of(2015,11,11), 156, new RatingName(2, "PG"));
         updateFilm.setId(film.getId());
-        updateFilm.setGenres(new ArrayList<>());
 
         Assertions.assertEquals(updateFilm, filmRepository.update(updateFilm));
     }
@@ -57,8 +56,7 @@ public class FilmApplicationTests {
                 LocalDate.of(2015,11,11), 156, new RatingName(2, "PG"));
         filmRepository.create(film2);
 
-        film1.setGenres(null);
-        film2.setGenres(null);
+
 
         List<Film> allFilm = new ArrayList<>();
         allFilm.add(film1);

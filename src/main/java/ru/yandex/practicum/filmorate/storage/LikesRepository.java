@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,28 +53,34 @@ public class LikesRepository {
 
     public Film deleteLike(Long filmId, Long userId) {
         Film film = getFilmById(filmId);
+        Set<Long> allLikes = new HashSet<>(jdbcTemplate.queryForList("SELECT user_id FROM likes WHERE film_id = ?",
+                Long.class, film.getId()));
+        film.setLikes(allLikes);
         User user = userRepository.getUserById(userId);
         int rowCount = jdbcTemplate.update(queryForDeleteLikes, filmId, userId);
         if (rowCount == 0) {
             log.error("Пользователь с ID = {} не ставил лайк фильму: {}", userId, film);
             throw new ValidationException("Пользователь с ID = " + userId + " не ставил лайк фильму: " + film);
         }
-        film.getLikes().remove(userId);
+        if (!allLikes.isEmpty()) {
+            film.getLikes().remove(userId);
+        }
         return film;
     }
 
     public List<Film> getTopFilmsByLikes(int count) {
-        List<Film> films = jdbcTemplate.query("SELECT f.*, r.name AS rating_name " +
+        String query = "SELECT f.*, r.name AS rating_name " +
                 "FROM film AS f JOIN rating AS r " +
-                "ON f.rating_id = r.rating_id;", mapper);
-        if (count > films.size()) {
-            count = films.size();
-        }
-        films = films.stream()
-                .sorted(new FilmLikesComparator().reversed())
-                .limit(count)
-                .toList();
-        return films;
+                "ON f.rating_id = r.rating_id " +
+                "JOIN (" +
+                "    SELECT film_id " +
+                "    FROM likes " +
+                "    GROUP BY film_id " +
+                "    ORDER BY COUNT(user_id) DESC " +
+                "    LIMIT " + count + " " +
+                ") AS top_films_by_like ON f.film_id = top_films_by_like.film_id;";
+
+        return jdbcTemplate.query(query, mapper);
     }
 
     private Film getFilmById(Long id) {

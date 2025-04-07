@@ -116,8 +116,6 @@ public class FilmRepository implements FilmStorage {
                 }
             });
 
-        } else {
-            film.setGenres(new ArrayList<>());
         }
         log.info("Создан фильм: {}", film);
         return film;
@@ -224,9 +222,7 @@ public class FilmRepository implements FilmStorage {
             throw new NotFoundException("Фильма с ID = " + id + " не существует!");
         }
         List<GenreName> allGenre = getGenreByFilm(film.getId());
-        if (allGenre.isEmpty()) {
-            film.setGenres(new ArrayList<>());
-        } else {
+        if (!allGenre.isEmpty()) {
             film.setGenres(allGenre);
         }
         return film;
