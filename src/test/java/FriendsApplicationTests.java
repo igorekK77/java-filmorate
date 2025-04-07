@@ -68,6 +68,7 @@ public class FriendsApplicationTests {
         userStorage.create(user2);
         friendsRepository.addFriend(user1.getId(), user2.getId());
         List<User> friends = new ArrayList<>();
+        user2.setFriends(null);
         friends.add(user2);
 
         Assertions.assertEquals(friends, friendsRepository.printListUserFriends(user1.getId()));
@@ -84,7 +85,7 @@ public class FriendsApplicationTests {
         User user3 = new User("testuser3@mail.ru", "testlogin3", "test3",
                 LocalDate.of(2003, 1,17));
         userStorage.create(user3);
-
+        user3.setFriends(null);
         List<User> friends = new ArrayList<>();
         friends.add(user3);
 

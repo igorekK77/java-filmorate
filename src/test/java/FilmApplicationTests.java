@@ -59,6 +59,9 @@ public class FilmApplicationTests {
                 LocalDate.of(2015,11,11), 156, new RatingName(2, "PG"));
         filmRepository.create(film2);
 
+        film1.setGenres(null);
+        film2.setGenres(null);
+
         List<Film> allFilm = new ArrayList<>();
         allFilm.add(film1);
         allFilm.add(film2);
