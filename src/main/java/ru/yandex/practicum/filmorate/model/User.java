@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.UserFriends;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
