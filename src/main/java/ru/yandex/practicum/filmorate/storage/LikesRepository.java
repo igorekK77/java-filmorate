@@ -99,12 +99,10 @@ public class LikesRepository {
             Long filmId = filmGenre.getFilmId();
             GenreName genreName = new GenreName(filmGenre.getGenreId(), filmGenre.getName());
 
-            if (genreMap.containsKey(filmId)) {
-                genreMap.get(filmId).add(genreName);
-            } else {
+            if (!genreMap.containsKey(filmId)) {
                 genreMap.put(filmId, new ArrayList<>());
-                genreMap.get(filmId).add(genreName);
             }
+            genreMap.get(filmId).add(genreName);
         }
         return genreMap;
     }
