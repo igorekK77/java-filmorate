@@ -5,11 +5,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.GenreName;
+import ru.yandex.practicum.filmorate.dto.RatingName;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-
 import java.time.LocalDate;
 
 @Component
@@ -17,20 +18,23 @@ public class InMemoryFilmStorageTests {
 
     private static FilmStorage filmStorage;
     private static Film film;
+    private static GenreName genreName = new GenreName(1, "Test");
+    private static final RatingName ratingName = new RatingName(1, "Test");
 
 
     @BeforeEach
     public void beforeEach() {
         filmStorage = new InMemoryFilmStorage();
         film = new Film("testFilm", "dTestFilm", LocalDate.of(2015,11,23),
-                112);
+                112, new RatingName(1));
+        genreName = new GenreName();
     }
 
     @Test
     public void testCreateFilm() {
         filmStorage.create(film);
         Film checkFilm = new Film("testFilm", "dTestFilm",
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, film);
     }
@@ -39,7 +43,7 @@ public class InMemoryFilmStorageTests {
     public void testUpdateFilm() {
         filmStorage.create(film);
         Film updateFilm = new Film("testUpdateFilm", "dTestUpdateFilm",
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         updateFilm.setId(1L);
         filmStorage.update(updateFilm);
         Assertions.assertEquals(updateFilm, film);
@@ -48,24 +52,24 @@ public class InMemoryFilmStorageTests {
     @Test
     public void testCreateFilmWithNullName() {
         Film nullNameFilm = new Film(null, "testFilm", LocalDate.of(2015,11,23),
-                112);
+                112, new RatingName(1));
         Assertions.assertThrows(ValidationException.class, () -> filmStorage.create(nullNameFilm));
     }
 
     @Test
     public void testCreateFilmWithDescription201Characters() {
         Film testFilm = new Film("Test", "a".repeat(201),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         Assertions.assertThrows(ValidationException.class, () -> filmStorage.create(testFilm));
     }
 
     @Test
     public void testCreateFilmWithDescription200Characters() {
         Film testFilm = new Film("Test", "a".repeat(200),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         filmStorage.create(testFilm);
         Film checkFilm = new Film("Test", "a".repeat(200),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, testFilm);
     }
@@ -73,10 +77,10 @@ public class InMemoryFilmStorageTests {
     @Test
     public void testCreateFilmWithDescription199Characters() {
         Film testFilm = new Film("Test", "a".repeat(199),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         filmStorage.create(testFilm);
         Film checkFilm = new Film("Test", "a".repeat(199),
-                LocalDate.of(2015,11,23), 112);
+                LocalDate.of(2015,11,23), 112, new RatingName(1));
         checkFilm.setId(1L);
         Assertions.assertEquals(checkFilm, testFilm);
     }

@@ -4,13 +4,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.dto.GenreName;
+import ru.yandex.practicum.filmorate.dto.RatingName;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
 @Data
+@NoArgsConstructor
 public class Film {
 
     @NotNull
@@ -28,12 +32,19 @@ public class Film {
 
     private Set<Long> likes;
 
-    public Film(String name, String description, LocalDate releaseDate, int duration) {
+    private List<GenreName> genres;
+
+    private RatingName mpa;
+
+    public Film(String name, String description, LocalDate releaseDate, int duration, RatingName mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-        likes = new HashSet<>();
+        this.mpa = mpa;
     }
 
 }
+
+
+
