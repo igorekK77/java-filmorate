@@ -9,8 +9,6 @@ import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.filmorate.FilmorateApplication;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.*;
-import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.GenreNameMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserFriendsMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
