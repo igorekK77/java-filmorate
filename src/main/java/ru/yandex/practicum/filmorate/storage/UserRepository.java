@@ -135,7 +135,7 @@ public class UserRepository implements UserStorage {
         User user = jdbcTemplate.queryForObject(queryForGetUserById, mapper, id);
         List<UserFriends> allFriends = getUserFriendsFromDB(user.getId());
         if (!allFriends.isEmpty()) {
-            user.setFriends(getUserFriendsFromDB(user.getId()));
+            user.setFriends(allFriends);
         }
         return user;
     }

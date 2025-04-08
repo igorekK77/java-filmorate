@@ -11,10 +11,7 @@ import ru.yandex.practicum.filmorate.dto.RatingName;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.*;
-import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.GenreNameMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.UserFriendsMapper;
-import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,7 +24,7 @@ import java.util.Set;
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({UserRepository.class, UserRowMapper.class, UserFriendsMapper.class,
-        FilmRepository.class, FilmRowMapper.class, GenreNameMapper.class, LikesRepository.class})
+        FilmRepository.class, FilmRowMapper.class, GenreNameMapper.class, LikesRepository.class, FilmGenreMapper.class})
 public class LikesApplicationTests {
     private final FilmRepository filmRepository;
     private final LikesRepository likesRepository;

@@ -7,10 +7,12 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dto.FilmGenreName;
 import ru.yandex.practicum.filmorate.dto.GenreName;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmGenreMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreNameMapper;
 
@@ -28,6 +30,7 @@ public class FilmRepository implements FilmStorage {
     private FilmRowMapper mapper;
     private JdbcTemplate jdbcTemplate;
     private GenreNameMapper genreNameMapper;
+    private FilmGenreMapper filmGenreMapper;
     private final String queryForCreateFilms = "INSERT INTO film (name, description, release_date, duration, " +
             "rating_id) VALUES (?, ?, ?, ?, ?);";
     private final String queryForGetFilmById = "SELECT f.*, r.name AS rating_name " +
@@ -47,10 +50,12 @@ public class FilmRepository implements FilmStorage {
     private final String queryForGetAllRatingId = "SELECT rating_id FROM rating";
 
     @Autowired
-    public FilmRepository(FilmRowMapper mapper, JdbcTemplate jdbcTemplate, GenreNameMapper genreNameMapper) {
+    public FilmRepository(FilmRowMapper mapper, JdbcTemplate jdbcTemplate, GenreNameMapper genreNameMapper,
+                          FilmGenreMapper filmGenreMapper) {
         this.mapper = mapper;
         this.jdbcTemplate = jdbcTemplate;
         this.genreNameMapper = genreNameMapper;
+        this.filmGenreMapper = filmGenreMapper;
     }
 
     @Override
@@ -204,7 +209,29 @@ public class FilmRepository implements FilmStorage {
 
     @Override
     public Collection<Film> allFilms() {
-        return jdbcTemplate.query(queryForGetAllFilm, mapper);
+        List<Film> allFilms = jdbcTemplate.query(queryForGetAllFilm, mapper);
+        String query = "SELECT fg.film_id, fg.genre_id, g.name FROM film_genre AS fg JOIN genre AS g " +
+                "ON fg.genre_id = g.genre_id ORDER BY film_id, genre_id";
+        List<FilmGenreName> allGenre = jdbcTemplate.query(query, filmGenreMapper);
+        Map<Long, List<GenreName>> filmGenre = getGenreNameFilm(allGenre);
+        allFilms.forEach(film -> film.setGenres(filmGenre.get(film.getId())));
+        return allFilms;
+    }
+
+    private Map<Long, List<GenreName>> getGenreNameFilm(List<FilmGenreName> allGenre) {
+        Map<Long, List<GenreName>> genreMap = new HashMap<>();
+        for (FilmGenreName filmGenre: allGenre) {
+            Long filmId = filmGenre.getFilmId();
+            GenreName genreName = new GenreName(filmGenre.getGenreId(), filmGenre.getName());
+
+            if (genreMap.containsKey(filmId)) {
+                genreMap.get(filmId).add(genreName);
+            } else {
+                genreMap.put(filmId, new ArrayList<>());
+                genreMap.get(filmId).add(genreName);
+            }
+        }
+        return genreMap;
     }
 
     private List<GenreName> getGenreByFilm(Long filmId) {

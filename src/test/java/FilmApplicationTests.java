@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.FilmorateApplication;
 import ru.yandex.practicum.filmorate.dto.RatingName;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmGenreMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreNameMapper;
 
@@ -21,7 +22,7 @@ import java.util.List;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({FilmRepository.class, FilmRowMapper.class, GenreNameMapper.class})
+@Import({FilmRepository.class, FilmRowMapper.class, GenreNameMapper.class, FilmGenreMapper.class})
 public class FilmApplicationTests {
     private final FilmRepository filmRepository;
 

@@ -4,15 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dto.FilmGenreName;
+import ru.yandex.practicum.filmorate.dto.GenreName;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmGenreMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Slf4j
@@ -20,6 +21,7 @@ public class LikesRepository {
     private final JdbcTemplate jdbcTemplate;
     private final FilmRowMapper mapper;
     private final UserRepository userRepository;
+    private final FilmGenreMapper filmGenreMapper;
     private final String queryForGetFilmById = "SELECT f.*, r.name AS rating_name " +
             "FROM film AS f JOIN rating AS r " +
             "ON f.rating_id = r.rating_id " +
@@ -29,10 +31,12 @@ public class LikesRepository {
     private final String queryForDeleteLikes = "DELETE FROM likes WHERE film_id = ? AND user_id = ?;";
 
     @Autowired
-    public LikesRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserRepository userRepository) {
+    public LikesRepository(JdbcTemplate jdbcTemplate, FilmRowMapper mapper, UserRepository userRepository,
+                           FilmGenreMapper filmGenreMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.mapper = mapper;
         this.userRepository = userRepository;
+        this.filmGenreMapper = filmGenreMapper;
     }
 
     public Film putLike(Long filmId, Long userId) {
@@ -80,7 +84,29 @@ public class LikesRepository {
                 "    LIMIT " + count + " " +
                 ") AS top_films_by_like ON f.film_id = top_films_by_like.film_id;";
 
-        return jdbcTemplate.query(query, mapper);
+        List<Film> allFilms = jdbcTemplate.query(query, mapper);
+        String queryForGenre = "SELECT fg.film_id, fg.genre_id, g.name FROM film_genre AS fg JOIN genre AS g " +
+                "ON fg.genre_id = g.genre_id ORDER BY film_id, genre_id";
+        List<FilmGenreName> allGenre = jdbcTemplate.query(queryForGenre, filmGenreMapper);
+        Map<Long, List<GenreName>> filmGenre = getGenreNameFilm(allGenre);
+        allFilms.forEach(film -> film.setGenres(filmGenre.get(film.getId())));
+        return allFilms;
+    }
+
+    private Map<Long, List<GenreName>> getGenreNameFilm(List<FilmGenreName> allGenre) {
+        Map<Long, List<GenreName>> genreMap = new HashMap<>();
+        for (FilmGenreName filmGenre: allGenre) {
+            Long filmId = filmGenre.getFilmId();
+            GenreName genreName = new GenreName(filmGenre.getGenreId(), filmGenre.getName());
+
+            if (genreMap.containsKey(filmId)) {
+                genreMap.get(filmId).add(genreName);
+            } else {
+                genreMap.put(filmId, new ArrayList<>());
+                genreMap.get(filmId).add(genreName);
+            }
+        }
+        return genreMap;
     }
 
     private Film getFilmById(Long id) {

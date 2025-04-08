@@ -23,9 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserRepository.class, UserRowMapper.class, UserFriendsMapper.class,
-FilmRepository.class, FilmRowMapper.class, GenreNameMapper.class, LikesRepository.class, GenreRepository.class,
-RatingRepository.class})
+@Import({UserRepository.class, UserRowMapper.class, UserFriendsMapper.class})
 public class UserApplicationTests {
     private final UserRepository userStorage;
 
